@@ -1,0 +1,53 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production & Build Artifacts
+/dist
+/build
+
+# Misc & OS Files
+.DS_Store
+*.pem
+
+# Environment & Secret Configuration Files
+.env
+.env.local
+.env.production
+.env.production.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+
+# Firebase & Cloud Storage Cache / Local Directories
+.firebase
+.firebaserc.local
+firebase-debug.log*
+
+# Cloudinary & Image Processing Cache
+.cloudinary/
+*.cache
+.cache/
+
+# Temporary Uploads & Scratch Directories
+/tmp
+/temp
+/uploads
+scratch/
+*.upload
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs & Editor Configuration
+.idea
+.vscode
+*.swp
+*.swo

@@ -1,0 +1,36 @@
+rules_version = '2';
+
+/**
+ * Alankaran Custom Image CMS — Firestore Security Rules (`Task 11`)
+ *
+ * Current Phase 3 Policy:
+ * - All administrative documents inside `cms/siteContent/{sectionKey}` are accessible strictly to authenticated users (`request.auth != null`).
+ * - Unauthenticated requests (public web users without an active administrator session) are denied access by default.
+ *
+ * Future Phase 4 & Role-Based Access Control (RBAC) Extension Strategy:
+ * - Admin (`role == 'Admin'`): Full CRUD access to all sections (`hero`, `about`, `services`, `gallery`, `settings`).
+ * - Editor (`role == 'Editor'`): Write access to content slots (`hero`, `about`, `services`, `gallery`), but read-only for `settings`.
+ * - Viewer (`role == 'Viewer'`): Read-only access to verify administrative drafts without write permissions.
+ *
+ * Example future rule snippet:
+ *   function isAdmin() {
+ *     return request.auth != null && request.auth.token.role == 'Admin';
+ *   }
+ *   function isEditor() {
+ *     return request.auth != null && (request.auth.token.role == 'Admin' || request.auth.token.role == 'Editor');
+ *   }
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Phase 3 & 4 CMS Configuration & Image Slots: /cms/siteContent/{sectionKey}
+    match /cms/siteContent/{sectionKey} {
+      // Allow read/write exclusively if signed in via Firebase Authentication
+      allow read, write: if request.auth != null;
+    }
+
+    // Default deny rule for any unexpected or unmodeled collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

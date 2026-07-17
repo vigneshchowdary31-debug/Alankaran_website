@@ -1,0 +1,633 @@
+/* Google Fonts are loaded non-blocking from index.html via <link rel="preload"> */
+/* Fallback font stacks ensure text renders before fonts arrive (font-display: swap) */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-gold: hsl(36 36% 52%);
+  --color-gold-hover: hsl(35 39% 44%);
+  --color-nizami-maroon: hsl(347 41% 21%);
+  --color-nizami-dark: hsl(20 12% 15%);
+  --color-sandstone: hsl(35 27% 81%);
+  --color-ivory: hsl(38 24% 96%);
+  --color-card-bg: hsl(35 44% 98%);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-script: var(--app-font-script);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+}
+
+:root {
+  --button-outline: rgba(176, 141, 87, 0.3);
+  --badge-outline: rgba(176, 141, 87, 0.2);
+  --opaque-button-border-intensity: 6;
+  --elevate-1: rgba(42, 36, 33, 0.03);
+  --elevate-2: rgba(42, 36, 33, 0.06);
+
+  /* Core Palette — Hyderabad Nizami Luxury Editorial Theme */
+  --background: 38 24% 96%;
+  /* Soft Ivory #F8F5F0 */
+  --foreground: 20 12% 15%;
+  /* Charcoal Espresso #2A2421 */
+  --border: 34 30% 86%;
+  /* Border Color #E7DED2 */
+
+  --card: 35 44% 98%;
+  /* Premium Card Background #FCFAF7 */
+  --card-foreground: 20 12% 15%;
+  --card-border: 34 30% 86%;
+
+  --sidebar: 38 24% 94%;
+  --sidebar-foreground: 20 12% 15%;
+  --sidebar-border: 34 30% 86%;
+  --sidebar-primary: 36 36% 52%;
+  /* Primary Gold #B08D57 */
+  --sidebar-primary-foreground: 38 24% 96%;
+  --sidebar-accent: 45 25% 43%;
+  /* Muted Olive Accent #8A7B52 */
+  --sidebar-accent-foreground: 20 12% 15%;
+  --sidebar-ring: 36 36% 52%;
+
+  --popover: 35 44% 98%;
+  --popover-foreground: 20 12% 15%;
+  --popover-border: 34 30% 86%;
+
+  --primary: 36 36% 52%;
+  /* Primary Gold #B08D57 */
+  --primary-foreground: 38 24% 96%;
+
+  --secondary: 347 41% 21%;
+  /* Deep Nizami Maroon #4A1F28 */
+  --secondary-foreground: 35 44% 98%;
+
+  --muted: 35 27% 81%;
+  /* Warm Sandstone #DDD2C2 */
+  --muted-foreground: 30 4% 41%;
+  /* Soft Text Gray #6E6A66 */
+
+  --accent: 45 25% 43%;
+  /* Muted Olive Accent #8A7B52 */
+  --accent-foreground: 35 44% 98%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 34 30% 86%;
+  --ring: 36 36% 52%;
+
+  --chart-1: 36 36% 52%;
+  --chart-2: 347 41% 21%;
+  --chart-3: 45 25% 43%;
+  --chart-4: 215 64% 30%;
+  --chart-5: 0 0% 50%;
+
+  /* Fonts */
+  --app-font-sans: 'Inter', sans-serif;
+  --app-font-serif: 'Cormorant Garamond', serif;
+  --app-font-script: 'Great Vibes', cursive;
+  --app-font-mono: Menlo, monospace;
+  --radius: 0.25rem;
+
+  --shadow-2xs: 0px 2px 8px 0px hsl(0 0% 0% / 0.06);
+  --shadow-xs: 0px 2px 8px 0px hsl(0 0% 0% / 0.08);
+  --shadow-sm: 0px 2px 8px 0px hsl(0 0% 0% / 0.08), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
+  --shadow: 0px 4px 16px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.06);
+  --shadow-md: 0px 4px 16px 0px hsl(0 0% 0% / 0.1), 0px 2px 4px -1px hsl(0 0% 0% / 0.06);
+  --shadow-lg: 0px 8px 24px 0px hsl(0 0% 0% / 0.12), 0px 4px 6px -1px hsl(0 0% 0% / 0.07);
+  --shadow-xl: 0px 12px 40px 0px hsl(0 0% 0% / 0.14), 0px 8px 10px -1px hsl(0 0% 0% / 0.08);
+  --shadow-2xl: 0px 20px 60px 0px hsl(0 0% 0% / 0.18);
+
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    /* Reduce layout-shift during font swap */
+    font-synthesis: none;
+    text-rendering: optimizeSpeed;
+  }
+
+  a,
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  label[for],
+  select {
+    cursor: pointer;
+  }
+}
+
+/*
+  font-display: swap stubs.
+  Google Fonts serves these declarations via its CSS, but by declaring
+  them here too we guarantee the browser uses swap even if the GF
+  stylesheet hasn't arrived yet at first paint.
+*/
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Cormorant Garamond');
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Cormorant Garamond Italic');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: local('Inter');
+}
+
+@font-face {
+  font-family: 'Great Vibes';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Great Vibes');
+}
+
+/* Luxury custom utilities */
+.text-gold {
+  color: hsl(var(--primary));
+}
+
+.text-gold-gradient {
+  background: linear-gradient(to right, hsl(36 36% 42%), hsl(36 36% 62%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+
+
+.border-gold {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+.bg-gold {
+  background-color: hsl(var(--primary));
+}
+
+.btn-outline-gold {
+  border: 1px solid hsl(var(--primary)) !important;
+  color: hsl(var(--primary)) !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-gold:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--background)) !important;
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.25) !important;
+}
+
+.bg-gold-hover:hover {
+  background-color: hsl(var(--primary) / 0.8) !important;
+}
+
+.bg-nizami-dark {
+  background-color: hsl(20 12% 15%);
+}
+
+
+
+.bg-luxury-gradient {
+  background: radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 60%),
+    linear-gradient(to bottom, hsl(var(--background)), hsl(var(--muted)));
+}
+
+
+
+.gold-glow {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.25);
+}
+
+/* Global brand overrides to map legacy classes safely */
+.bg-white {
+  background-color: hsl(var(--card)) !important;
+}
+
+.border-stone-200,
+.border-stone-100,
+.border-border\/20 {
+  border-color: hsl(var(--border)) !important;
+}
+
+.shadow-sm,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Luxury theme background and border overrides for legacy/utility classes */
+
+
+
+
+
+
+/*
+  GPU promotion for heavy animated elements.
+  Tells the browser compositor to handle transforms/opacity on their own
+  layer — prevents main-thread paint jank (was causing 10.6 s main-thread work).
+*/
+.glass-card,
+[data-animated],
+.section-label {
+  will-change: auto;
+  /* reset default */
+}
+
+/* Only promote when animation is actually active */
+.animating {
+  will-change: transform, opacity;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(185, 148, 42, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+
+
+.section-label {
+  font-family: var(--app-font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Only show the decorative line on non-button elements */
+.section-label:not(button):not([type]):not(.no-line)::before {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.text-display {
+  font-family: var(--app-font-serif);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@layer components {
+  .text-body {
+    font-family: var(--app-font-sans);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    color: var(--muted-foreground);
+  }
+}
+
+.text-quote {
+  font-family: var(--app-font-serif);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.heading-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.heading-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 40px;
+  height: 2px;
+  background: hsl(46 65% 52%);
+}
+
+/* Native browser scrolling — no overrides */
+
+/* Image placeholder gradient */
+.img-placeholder {
+  background: linear-gradient(135deg,
+      hsl(43 25% 90%) 0%,
+      hsl(10 30% 88%) 30%,
+      hsl(45 30% 85%) 60%,
+      hsl(350 25% 88%) 100%);
+}
+
+.img-placeholder-dark {
+  background: linear-gradient(135deg,
+      hsl(150 15% 16%) 0%,
+      hsl(350 25% 18%) 30%,
+      hsl(45 30% 18%) 60%,
+      hsl(150 15% 14%) 100%);
+}
+
+/* Clip path reveal animation */
+@keyframes revealUp {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.reveal-up {
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(40 15% 93%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(46 65% 60%);
+  border-radius: 3px;
+}
+
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  .no-default-hover-elevate {}
+
+  .no-default-active-elevate {}
+
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
+    inset: -1px;
+  }
+}
+
+/* Custom enhancements: particles, ripples, and pulse rings */
+@keyframes particle-up-1 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-8px, -18px) scale(0); opacity: 0; }
+}
+@keyframes particle-up-2 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-2px, -24px) scale(0); opacity: 0; }
+}
+@keyframes particle-up-3 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(4px, -16px) scale(0); opacity: 0; }
+}
+@keyframes particle-up-4 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(10px, -20px) scale(0); opacity: 0; }
+}
+
+.animate-particle-1 { animation: particle-up-1 0.7s ease-out infinite; }
+.animate-particle-2 { animation: particle-up-2 0.7s ease-out infinite 0.1s; }
+.animate-particle-3 { animation: particle-up-3 0.7s ease-out infinite 0.05s; }
+.animate-particle-4 { animation: particle-up-4 0.7s ease-out infinite 0.15s; }
+
+@keyframes gold-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+.animate-gold-ripple {
+  animation: gold-ripple 400ms ease-out forwards;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-sweep {
+  animation: sweep 3s ease-in-out infinite;
+}
+
+@keyframes royal-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(201, 169, 110, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(201, 169, 110, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 169, 110, 0); }
+}
+.royal-theme-pulse {
+  animation: royal-pulse 1.5s infinite;
+  border: 2px solid hsl(var(--primary));
+  border-radius: 12px;
+}
+
+/* Force classic light theme values on scoped subtrees */
+.theme-classic {
+  --background: 38 24% 96%;
+  --foreground: 20 12% 15%;
+  --border: 34 30% 86%;
+
+  --card: 35 44% 98%;
+  --card-foreground: 20 12% 15%;
+  --card-border: 34 30% 86%;
+
+  --sidebar: 38 24% 94%;
+  --sidebar-foreground: 20 12% 15%;
+  --sidebar-border: 34 30% 86%;
+  --sidebar-primary: 36 36% 52%;
+  --sidebar-primary-foreground: 38 24% 96%;
+  --sidebar-accent: 45 25% 43%;
+  --sidebar-accent-foreground: 20 12% 15%;
+  --sidebar-ring: 36 36% 52%;
+
+  --popover: 35 44% 98%;
+  --popover-foreground: 20 12% 15%;
+  --popover-border: 34 30% 86%;
+
+  --primary: 36 36% 52%;
+  --primary-foreground: 38 24% 96%;
+
+  --secondary: 347 41% 21%;
+  --secondary-foreground: 35 44% 98%;
+
+  --muted: 35 27% 81%;
+  --muted-foreground: 30 4% 41%;
+
+  --accent: 45 25% 43%;
+  --accent-foreground: 35 44% 98%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 34 30% 86%;
+  --ring: 36 36% 52%;
+
+  --app-font-serif: 'Cormorant Garamond', serif;
+  --app-font-script: 'Great Vibes', cursive;
+}

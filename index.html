@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%23c9a96e'>✦</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>Alankaran — Luxury Wedding Experiences</title>
+    <meta name="description" content="Alankaran creates luxurious wedding decor, floral styling, and immersive celebrations inspired by Indian heritage, romance, and modern editorial beauty." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Alankaran — Luxury Wedding Experiences" />
+    <meta property="og:description" content="Designing royal wedding experiences with timeless elegance. Luxury floral boutique and Indian wedding brand." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Alankaran — Luxury Wedding Experiences" />
+    <meta name="twitter:description" content="Designing royal wedding experiences with timeless elegance." />
+
+    <!-- DNS prefetch + preconnect for Google Fonts (critical path) -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <script>
+      (function() {
+        try {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.removeItem('alankaran-theme');
+        } catch (e) {}
+      })();
+    </script>
+
+    <!--
+      Non-blocking font load strategy:
+      1. Preload as style (highest priority resource hint)
+      2. onload swaps rel to "stylesheet" (avoids render-blocking)
+      3. font-display=swap (in the URL) keeps text visible during fetch
+      4. <noscript> fallback for JS-disabled clients
+    -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=Great+Vibes&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=Great+Vibes&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+    </noscript>
+
+
+
+    <!--
+      Inline critical CSS:
+      Render the above-the-fold hero background + text colours immediately,
+      before the Tailwind/app bundle arrives. This eliminates the blank white
+      flash and keeps FCP fast even while the JS bundle is still downloading.
+    -->
+    <style>
+      /* Critical: prevent FOUC (Flash Of Unstyled Content) */
+      html { background: #F8F5F0; color: #2A2421; }
+      body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #F8F5F0; }
+      /* Above-fold hero skeleton — visible before React hydrates */
+      #root { min-height: 100svh; }
+      /* font-display:swap fallback stacks — text always visible */
+      .font-serif  { font-family: 'Cormorant Garamond', Georgia, serif; }
+      .font-script { font-family: 'Great Vibes', cursive; }
+      /* Gold accent so hero tagline renders instantly */
+      .text-gold   { color: #B08D57; }
+    </style>
+    <!--app-head-->
+  </head>
+  <body>
+    <div id="root"><!--app-html--></div>
+    <!--
+      type="module" is inherently deferred (never render-blocking).
+      The React bundle is split into lazy chunks by vite.config.ts:
+        - three-vendor     → only loaded when HeroCanvas mounts
+        - framer-motion-vendor → only loaded when animations enter viewport
+        - gsap-vendor      → only loaded when GSAP ScrollTrigger fires
+        - lenis-vendor     → only loaded after hydration
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
