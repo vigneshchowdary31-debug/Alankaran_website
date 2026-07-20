@@ -6,7 +6,6 @@ import { AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
-import LenisProvider from "@/components/LenisProvider";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { BookingProvider } from "@/context/BookingContext";
 import NotFound from "@/pages/not-found";
@@ -136,7 +135,6 @@ function App({ helmetContext, isServer = false }: { helmetContext?: any, isServe
     <HelmetProvider context={helmetContext}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <LenisProvider>
             <BookingProvider>
               <LazyMotion features={domAnimation} strict>
                 {isServer ? (
@@ -148,7 +146,6 @@ function App({ helmetContext, isServer = false }: { helmetContext?: any, isServe
                 )}
               </LazyMotion>
             </BookingProvider>
-          </LenisProvider>
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

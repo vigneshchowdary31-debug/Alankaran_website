@@ -6,42 +6,34 @@ import {
   type Unsubscribe,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { MESSAGES } from "@/constants/messages";
+import { toUserFacingError } from "@/utils/userFacingError";
 
 /**
  * Maps raw Firebase Authentication error codes to clean, human-friendly messages for non-technical users.
  */
 export function getFriendlyErrorMessage(error: any): string {
-  if (!error) {
-    return MESSAGES.ERROR.UNKNOWN;
-  }
+  const code = String(error?.code || "") + " " + String(error?.message || "");
 
-  const code = String(error.code || "");
-  const message = String(error.message || "");
-
-  if (code.includes("api-key-not-valid") || message.includes("api-key-not-valid")) {
-    return "System configuration error (`auth/api-key-not-valid`): Firebase API key is missing or invalid. Please populate `.env.local` with your valid Firebase API credentials and restart the development server (`npm run dev`).";
+  // Sign-in has a few failure modes with genuinely different advice, so they are handled here
+  // rather than by the generic mapper.
+  if (code.includes("api-key-not-valid")) {
+    return "The CMS is not configured correctly. Its Firebase credentials are missing or invalid — please contact your administrator.";
   }
   if (code.includes("invalid-credential") || code.includes("user-not-found") || code.includes("wrong-password")) {
-    return MESSAGES.ERROR.INVALID_CREDENTIALS;
+    return "Incorrect email or password. Please check your details and try again.";
   }
   if (code.includes("invalid-email")) {
-    return "The email address format is invalid. Please enter a valid email address.";
+    return "That doesn't look like a valid email address. Please check it and try again.";
   }
   if (code.includes("user-disabled")) {
-    return "This administrator account has been disabled. Please contact system support.";
+    return "This account has been disabled. Please contact your administrator to restore access.";
   }
   if (code.includes("too-many-requests")) {
-    return "Too many failed login attempts. For security reasons, please wait a few minutes before trying again.";
-  }
-  if (code.includes("network-request-failed") || message.includes("network-request-failed")) {
-    return MESSAGES.ERROR.NETWORK;
+    return "Too many sign-in attempts. For security, please wait a few minutes before trying again.";
   }
 
-  if (import.meta.env.DEV) {
-    console.error("[AuthService] Unhandled Firebase error:", error);
-  }
-  return `Authentication failed due to a system error (${code || message}). Please try again later.`;
+  const { title, message } = toUserFacingError(error, "signing you in");
+  return `${title}. ${message}`;
 }
 
 export interface IAuthService {

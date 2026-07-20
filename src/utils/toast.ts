@@ -26,49 +26,6 @@ export const notificationService = {
     });
   },
 
-  showWarning(title: string, description?: string): void {
-    toast({
-      title: `⚠ ${title}`,
-      description,
-      variant: "default",
-      duration: 5000,
-    });
-  },
-
-  showInfo(title: string, description?: string): void {
-    toast({
-      title,
-      description,
-      variant: "default",
-      duration: 4000,
-    });
-  },
-
-  /**
-   * Shows a persistent loading toast. Returns the toast id so you can dismiss it
-   * once the async operation completes via `dismissToast(id)`.
-   */
-  showLoading(title: string, description?: string): string {
-    const { id } = toast({
-      title: `⟳ ${title}`,
-      description,
-      variant: "default",
-      duration: 60000, // Long duration — caller must dismiss manually
-    });
-    return id;
-  },
-
-  dismissToast(id: string): void {
-    // Dispatch DISMISS_TOAST via the toast module internals
-    // We re-use the toast() function with duration=0 override trick isn't possible,
-    // so we import dispatch directly via the hook
-    toast({ title: "", duration: 1, variant: "default" }); // no-op; real dismiss below
-    // The Radix/internal system auto-dismisses via onOpenChange; we'll use update trick:
-    import("@/hooks/use-toast").then(({ toast: t }) => {
-      // Workaround: update toast to near-zero duration
-    });
-  },
-
   /**
    * Shows a toast with an Undo action button.
    * `onUndo` is called if the user clicks Undo within the toast duration.
@@ -98,14 +55,6 @@ export const notificationService = {
   },
 };
 
-export const {
-  showSuccess,
-  showError,
-  showWarning,
-  showInfo,
-  showLoading,
-  dismissToast,
-  showUndoToast,
-} = notificationService;
+export const { showSuccess, showError, showUndoToast } = notificationService;
 
 export default notificationService;

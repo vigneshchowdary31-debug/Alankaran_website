@@ -22,7 +22,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { MESSAGES } from "@/constants/messages";
+import { toUserFacingError } from "@/utils/userFacingError";
 import type { FirestoreCollectionName, FirestoreDocumentPath } from "./firestorePaths";
 import {
   FirestoreOperationError,
@@ -89,30 +89,16 @@ function toDocumentRef(path: FirestoreDocumentPath) {
 }
 
 /**
- * Translates raw Firestore or network error codes into clean, non-technical human-friendly strings.
+ * User-facing text for a Firestore failure.
+ *
+ * Delegates to the shared `toUserFacingError` mapper so the CMS speaks with one voice — the same
+ * wording appears whether a failure surfaces from Firestore, Cloudinary, or auth. The machine-
+ * readable code is preserved separately on `FirestoreOperationError.code` for callers that branch
+ * on it, and the raw error is logged by the diagnostics tracer.
  */
 export function getFriendlyFirestoreError(error: any): string {
-  if (!error) return MESSAGES.ERROR.UNKNOWN;
-
-  if (typeof window !== "undefined" && !navigator.onLine) {
-    return "You are currently offline. Please check your internet connection and try again.";
-  }
-
-  const code = error?.code || error?.message || "";
-  if (code.includes("permission-denied") || code.includes("PERMISSION_DENIED")) {
-    return "Permission denied: You must be signed in as an administrator to save or view CMS data.";
-  }
-  if (code.includes("unavailable") || code.includes("UNAVAILABLE") || code.includes("network")) {
-    return "Network error or timeout while connecting to cloud database. Please verify internet access.";
-  }
-  if (code.includes("not-found") || code.includes("NOT_FOUND")) {
-    return "Requested CMS document was not found.";
-  }
-
-  if (import.meta.env.DEV) {
-    console.error("[FirestoreService] Unhandled error:", error);
-  }
-  return `Database operation failed (${code}). Please try again later.`;
+  const { title, message } = toUserFacingError(error);
+  return `${title}. ${message}`;
 }
 
 /** Declarative query options for `list`, keeping raw Firestore query objects out of domain services. */
