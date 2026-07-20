@@ -29,7 +29,7 @@
       "destination": "/"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.).*)",
       "destination": "/"
     }
   ]

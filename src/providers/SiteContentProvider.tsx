@@ -10,9 +10,10 @@ import React, {
 import { firestoreService, FirestorePaths } from "@/services/firestore";
 import { cmsCacheService, auditLogService, slotCoverageService } from "@/domains/cms/services";
 import type { CMSSectionContent, SectionKey, CMSSlotMetadata, CMSContactInfo } from "@/domains/cms/types";
-import { PUBLIC_SECTIONS, DEFAULT_CONTACT_INFO } from "@/domains/cms/constants";
+import { PUBLIC_SECTIONS, DEFAULT_CONTACT_INFO, BUNDLED_GALLERY_FALLBACKS } from "@/domains/cms/constants";
 import { resolveGalleryImages, selectPublicSlotMap } from "@/domains/cms/utils/galleryResolver";
 import { resolvePublicationState } from "@/domains/cms/utils/globalSettingsDiff";
+import { probeImage, isImageBroken } from "@/domains/cms/utils/imageHealth";
 import type { CoverageReport } from "@/domains/cms/services/slotCoverage.service";
 import { useAuth } from "@/context/AuthContext";
 import { useCMSAnalytics } from "@/domains/cms/hooks/useCMSAnalytics";
@@ -109,6 +110,10 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
     typeof window !== "undefined" ? !navigator.onLine : false
   );
   const [previewMode, setPreviewModeState] = useState<boolean>(false);
+  // Bumped when a CMS image URL is confirmed dead, so consumers re-render and pick up the
+  // bundled fallback. The health verdicts themselves live in the imageHealth module.
+  const [brokenRevision, setBrokenRevision] = useState(0);
+  const markBroken = useCallback(() => setBrokenRevision((n) => n + 1), []);
 
   // Task 17: Preview Mode is restricted exclusively to authenticated administrators
   const setPreviewMode = useCallback((enabled: boolean) => {
@@ -242,8 +247,16 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
       const slotMap = selectPublicSlotMap(section, previewMode && Boolean(currentUser));
       const slot: CMSSlotMetadata | undefined = slotMap[slotName];
 
-      if (slot && slot.url) {
-        // Phase A Task 4: record the hit so Diagnostics can report real coverage.
+      // A slot record exists AND its asset still resolves. `isImageBroken` only ever returns true
+      // for a URL a previous probe positively failed, so the happy path is unaffected: the CMS URL
+      // is returned immediately, with no probe latency and no flash of fallback content.
+      if (slot && slot.url && !isImageBroken(slot.url)) {
+        // Verify the asset in the background. Firestore can only tell us a URL was stored, not that
+        // the underlying Cloudinary asset still exists — so a deleted or renamed asset would render
+        // broken with no fallback. A failed probe flips this slot to its bundled asset on the next
+        // render. Deduped per URL, skipped during SSR, and never run for local paths.
+        probeImage(slot.url, markBroken);
+
         slotCoverageService.record(String(sectionKey), slotName, true);
         return {
           url: slot.url,
@@ -269,7 +282,7 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
         sectionKey,
       };
     },
-    [sections, previewMode, currentUser]
+    [sections, previewMode, currentUser, brokenRevision, markBroken]
   );
 
   /**
@@ -282,10 +295,30 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
    */
   const getGalleryImages = useCallback((): SiteGalleryImage[] => {
     const slotMap = selectPublicSlotMap(sections["gallery"], previewMode && Boolean(currentUser));
-    const images = resolveGalleryImages(slotMap);
+    const resolved = resolveGalleryImages(slotMap);
+
+    // Resolution order is Cloudinary first, bundled asset only if that is unavailable.
+    //
+    // A confirmed-dead entry is SUBSTITUTED with the bundled image at the same position, not
+    // dropped. Dropping would shift every later entry up by one, so a single dead URL would
+    // silently change which photo appears in every downstream position — `WeddingStories` reads
+    // gallery[0..7] and `HomeBelowFold` reads gallery[0..11] positionally. Substituting keeps the
+    // collection's length and ordering stable.
+    const images = resolved
+      .map((img, index) => {
+        if (!isImageBroken(img.url)) {
+          probeImage(img.url, markBroken); // verify in the background; no cost on the happy path
+          return img;
+        }
+        const bundled = BUNDLED_GALLERY_FALLBACKS[index];
+        // Past the end of the bundled list there is nothing to substitute, so the entry is dropped.
+        return bundled ? { ...img, url: bundled.url } : null;
+      })
+      .filter((img): img is SiteGalleryImage => img !== null);
+
     slotCoverageService.recordGalleryCount(images.length);
     return images;
-  }, [sections, previewMode, currentUser]);
+  }, [sections, previewMode, currentUser, brokenRevision, markBroken]);
 
   const getCoverageReport = useCallback(
     (): CoverageReport => slotCoverageService.buildReport(sections),
