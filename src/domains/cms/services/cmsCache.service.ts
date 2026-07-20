@@ -3,7 +3,7 @@ import type { CMSCacheEntry } from "../types";
 import { APP_CONFIG } from "@/constants/app";
 
 /**
- * Phase 3.5 Enterprise Multi-Tier Cache Layer (`Task 6`).
+ * Phase 3.5 Enterprise Multi-Tier Cache Layer.
  * Architecture: Memory Cache (Map) -> localStorage Cache -> Firestore.
  * Reduces redundant network queries and guarantees instant optimistic UI rendering.
  */

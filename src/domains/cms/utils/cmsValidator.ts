@@ -1,7 +1,7 @@
 import type { CMSSlotMetadata, CMSSectionContent, CMSSectionWithPublishing } from "../types";
 
 /**
- * Validates a CMSSlotMetadata object before persistence to Firestore (`Task 14`).
+ * Validates a CMSSlotMetadata object before persistence to Firestore.
  * Prevents invalid documents, missing metadata, duplicate/empty IDs, and corrupt image structures.
  */
 export function validateCMSSlotMetadata(metadata: Partial<CMSSlotMetadata>): { valid: boolean; error?: string } {

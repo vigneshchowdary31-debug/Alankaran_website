@@ -15,7 +15,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AdminRouter } from "@/components/admin/AdminRouter";
 import { SiteContentProvider } from "@/providers/SiteContentProvider";
 import { SiteErrorBoundary } from "@/components/common/SiteErrorBoundary";
-import { AdminPreviewToggle } from "@/components/common/AdminPreviewToggle";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -103,7 +102,6 @@ function MainContent({ showWhatsApp }: { showWhatsApp: boolean }) {
           <Router />
           <FloatingCTA />
           {showWhatsApp && <WhatsAppButton />}
-          <AdminPreviewToggle />
         </SiteErrorBoundary>
       </SiteContentProvider>
     </AuthProvider>

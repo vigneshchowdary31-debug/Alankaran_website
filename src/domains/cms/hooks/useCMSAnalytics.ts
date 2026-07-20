@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { CMSAnalyticsEvent, CMSAnalyticsEventType } from "../types";
 
 /**
- * Phase 4 Enterprise Analytics & Telemetry Hook (`Task 18`).
+ * Phase 4 Enterprise Analytics & Telemetry Hook.
  * Tracks image loads, CMS updates, cache hits/misses, and performance metrics.
  * Decoupled from any external vendor so client can connect Google Analytics, Plausible, or custom telemetry easily.
  */

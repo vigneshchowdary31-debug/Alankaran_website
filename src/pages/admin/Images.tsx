@@ -39,7 +39,7 @@ export function AdminImages() {
         </Link>
       </PageHeader>
 
-      {/* Status Banner (`Task 1 & Task 12`) */}
+      {/* Status Banner */}
       <CMSStatusBanner />
 
       {/* Cloudinary Environment Status Banner */}
@@ -88,7 +88,7 @@ export function AdminImages() {
         </div>
       </Alert>
 
-      {/* Catalog-driven editors (`Phase A Task 2`) */}
+      {/* Catalog-driven editors */}
       {SLOT_CATALOG.map((section) => (
         <section key={section.sectionKey} className="space-y-5">
           <div className="flex items-end justify-between flex-wrap gap-2 border-b border-stone-800/80 pb-3">
@@ -173,7 +173,7 @@ export function AdminImages() {
         </Link>
       </Card>
 
-      {/* Live integration notice (`Phase A Task 6`) */}
+      {/* Live integration notice */}
       <Card className="bg-black/25 border-emerald-900/40 p-6 rounded-2xl">
         <CardTitle className="font-serif text-base text-stone-200 mb-2 font-normal flex items-center gap-2">
           <ShieldCheck className="size-4 text-emerald-400" /> Live Website Integration Is Active

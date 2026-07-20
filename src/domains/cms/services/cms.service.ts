@@ -95,7 +95,7 @@ export const cmsService: ICMSService = {
 
     await firestoreService.save(FirestorePaths.siteContent(sectionKey), payload);
 
-    // Record audit log (`Task 10`)
+    // Record audit log
     auditLogService.log(
       "Upload",
       metadata.updatedBy || "admin@alankaran.com",
@@ -103,7 +103,7 @@ export const cmsService: ICMSService = {
       `Updated image slot (${metadata.cloudinaryId})`
     );
 
-    // Invalidate and update local tier cache (`Task 6`)
+    // Invalidate and update local tier cache
     cmsCacheService.invalidate(sectionKey);
 
     // Retrieve latest merged section data from Firestore
@@ -124,7 +124,7 @@ export const cmsService: ICMSService = {
   },
 
   async loadSection(sectionKey: SectionKey | string): Promise<CMSSectionContent | null> {
-    // Level 1 & 2 Cache Check (`Task 6`)
+    // Level 1 & 2 Cache Check
     const cached = cmsCacheService.get<CMSSectionContent>(sectionKey);
     if (cached) {
       return cached;
@@ -179,7 +179,7 @@ export const cmsService: ICMSService = {
     const versionId = `v_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = Date.now();
 
-    // Prepare version history snapshot (`Task 2`)
+    // Prepare version history snapshot
     const snapshotPayload: CMSVersionSnapshot = {
       versionId,
       timestamp: now,
@@ -204,7 +204,7 @@ export const cmsService: ICMSService = {
       updatedBy: userEmail || "admin@alankaran.com",
     };
 
-    // Execute via atomic batch or transaction (`Task 4`)
+    // Execute via atomic batch or transaction
     await firestoreService.save(FirestorePaths.version(sectionKey, versionId), snapshotPayload);
     await firestoreService.save(FirestorePaths.siteContent(sectionKey), sectionPayload);
 
@@ -254,7 +254,7 @@ export const cmsService: ICMSService = {
     const trashId = `trash_${Date.now()}_${slotName}`;
     const now = Date.now();
 
-    // Move record into trash collection (`Task 3`)
+    // Move record into trash collection
     const trashRecord: CMSTrashRecord = {
       trashId,
       deletedAt: now,

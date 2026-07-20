@@ -78,7 +78,7 @@ export function GalleryPreviewModal({
               <div className="size-8 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
                 <Eye className="size-4" />
               </div>
-              <span>Live Gallery Device Simulator (`Task 8`)</span>
+              <span>Live Gallery Device Simulator</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">
                 {isPreviewingDraft ? "Draft Preview Mode" : "Published State"}
               </span>
@@ -88,7 +88,7 @@ export function GalleryPreviewModal({
             </DialogDescription>
           </div>
 
-          {/* Device Switcher Tabs (`Task 8`) */}
+          {/* Device Switcher Tabs */}
           <div className="flex items-center gap-1.5 bg-black/60 p-1 rounded-xl border border-stone-800">
             <Button
               type="button"
@@ -183,7 +183,7 @@ export function GalleryPreviewModal({
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
 
-                    {/* Order Badge inside preview (`Task 3`) */}
+                    {/* Order Badge inside preview */}
                     <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md border border-gold/30 px-2 py-0.5 rounded text-[10px] font-mono text-gold flex items-center gap-1 shadow">
                       <Layers className="size-2.5" /> #{slot.order || index + 1}
                     </div>

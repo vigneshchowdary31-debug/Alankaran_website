@@ -39,7 +39,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ROUTES, APP_CONFIG } from "@/constants";
 
 /**
- * Phase 3.5 Enterprise Diagnostics & Health Dashboard (`Task 7 & Task 8`).
+ * Phase 3.5 Enterprise Diagnostics & Health Dashboard.
  * Provides full observability, multi-tier cache diagnostics, and subsystem health scores.
  * Exclusively accessible to administrators via `/admin/debug`. Zero public website impact.
  */
@@ -123,7 +123,7 @@ export function AdminDebug() {
   const handleTestRecovery = async () => {
     try {
       setTestingRecovery(true);
-      setRecoveryMsg("Pinged Firestore, verified Cloudinary CDN configuration, and rehydrated real-time listeners (`Task 12`).");
+      setRecoveryMsg("Pinged Firestore, verified Cloudinary CDN configuration, and rehydrated real-time listeners.");
       await runDiagnostics();
     } finally {
       setTestingRecovery(false);
@@ -182,7 +182,7 @@ export function AdminDebug() {
         </Alert>
       )}
 
-      {/* Health Score Overview Banner (`Task 8`) */}
+      {/* Health Score Overview Banner */}
       <Card className="bg-black/40 border-stone-800/80 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
@@ -203,7 +203,7 @@ export function AdminDebug() {
                 </span>
               </div>
               <p className="font-sans text-xs text-stone-400 font-light mt-1 max-w-2xl leading-relaxed">
-                All core persistence, storage CDN, and authentication subsystems have been checked against Phase 3.5 enterprise constraints (`Task 8`).
+                All core persistence, storage CDN, and authentication subsystems have been checked against Phase 3.5 enterprise constraints.
               </p>
             </div>
           </div>
@@ -217,7 +217,7 @@ export function AdminDebug() {
               className="gap-2 text-xs border-gold/40 text-gold hover:bg-gold/10"
             >
               <Activity className="size-3.5" />
-              <span>{testingRecovery ? "Testing Recovery..." : "Test Reconnect & Recovery (`Task 12`)"}</span>
+              <span>{testingRecovery ? "Testing Recovery..." : "Test Reconnect & Recovery"}</span>
             </Button>
             <Button
               variant="outline"
@@ -226,7 +226,7 @@ export function AdminDebug() {
               className="gap-2 text-xs border-stone-700 text-stone-300 hover:text-rose-400 hover:border-rose-800"
             >
               <Trash2 className="size-3.5 text-rose-400" />
-              <span>Clear Cache Tier (`Task 6`)</span>
+              <span>Clear Cache Tier</span>
             </Button>
           </div>
         </div>
@@ -325,7 +325,7 @@ export function AdminDebug() {
         </Card>
       </div>
 
-      {/* CMS Slot Coverage (`Phase A Task 5`) */}
+      {/* CMS Slot Coverage */}
       <Card className="bg-black/30 border-stone-800/80 rounded-2xl p-6 shadow-xl">
         <CardHeader className="p-0 mb-6 border-b border-stone-800/80 pb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -494,7 +494,7 @@ export function AdminDebug() {
       <Card className="bg-black/30 border-stone-800/80 rounded-2xl p-6 shadow-xl">
         <CardHeader className="p-0 mb-6 border-b border-stone-800/80 pb-4">
           <CardTitle className="font-serif text-xl text-stone-100 font-normal flex items-center gap-2.5">
-            <Terminal className="size-5 text-gold" /> System Telemetry & Environment Audit Table (`Task 7`)
+            <Terminal className="size-5 text-gold" /> System Telemetry & Environment Audit Table
           </CardTitle>
           <CardDescription className="text-xs font-sans text-stone-400 mt-1 font-light">
             Exact runtime inspection parameters, memory cache entries, and browser environment profiles.
@@ -538,7 +538,7 @@ export function AdminDebug() {
           </div>
 
           <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Public Website Isolation (`Phase 4`):</span>
+            <span className="text-stone-400">Public Website Isolation:</span>
             <span className="text-gold font-semibold">100% Isolated & Untouched</span>
           </div>
 

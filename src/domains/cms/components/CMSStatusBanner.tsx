@@ -39,12 +39,12 @@ export function CMSStatusBanner() {
           <WifiOff className="size-4 text-red-400" />
           <AlertTitle className="font-serif font-medium">No Internet Connection Detected</AlertTitle>
           <AlertDescription className="text-xs font-sans text-red-300">
-            You are currently working offline (`Task 12`). Cloudinary CDN uploads and Firestore real-time synchronization (`cmsSiteContent`) are suspended until network connectivity is restored.
+            You are currently working offline. Cloudinary CDN uploads and Firestore real-time synchronization (`cmsSiteContent`) are suspended until network connectivity is restored.
           </AlertDescription>
         </Alert>
       )}
 
-      {/* ── Unconfigured Environment Warning (`Task 1`) ── */}
+      {/* ── Unconfigured Environment Warning ── */}
       {isPlaceholderEnv && (
         <Alert className="bg-amber-950/80 border-amber-800/80 text-amber-200">
           <AlertCircle className="size-4 text-amber-400" />

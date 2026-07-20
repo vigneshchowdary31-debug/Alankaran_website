@@ -2,7 +2,7 @@ import type { CMSSlotMetadata, ImageUsageReference } from "../types";
 import { getSlotDefinition, getSectionDefinition } from "../constants";
 
 /**
- * Phase 3.5 Enterprise Image Usage Tracking Service (`Task 9`).
+ * Phase 3.5 Enterprise Image Usage Tracking Service.
  * Tracks exact references to every uploaded asset across sections (`hero`, `about`, `services`, `gallery`).
  * Prevents orphaned deletions and provides immediate pre-deletion warning diagnostics.
  */

@@ -18,8 +18,8 @@ export interface SlotManagerProps {
 /**
  * Smart CMS Domain Component (`SlotManager`).
  * Automatically binds Phase 2 `ImageUpload` component directly to Phase 3 Firestore `useSection` hook.
- * Handles automatic reading (`Task 9`), saving upload results (`Task 8`), loading states (`Task 10`),
- * and real-time multi-tab synchronization (`Task 13`).
+ * Handles automatic reading, saving upload results, loading states,
+ * and real-time multi-tab synchronization.
  */
 export function SlotManager({
   sectionKey,

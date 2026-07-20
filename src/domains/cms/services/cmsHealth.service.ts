@@ -4,7 +4,7 @@ import { cmsCacheService } from "./cmsCache.service";
 import type { CMSHealthReport } from "../types";
 
 /**
- * Phase 3.5 Enterprise CMS Health Monitoring Service (`Task 8`).
+ * Phase 3.5 Enterprise CMS Health Monitoring Service.
  * Verifies real-time reachability, authentication status, latency, and cache health.
  * Calculates an overall health score (0-100) and assigns status (`healthy`, `degraded`, `critical`).
  */

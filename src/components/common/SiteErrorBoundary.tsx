@@ -12,7 +12,7 @@ export interface SiteErrorBoundaryState {
 }
 
 /**
- * Phase 4 Enterprise Public Website Error Boundary (`Task 16`).
+ * Phase 4 Enterprise Public Website Error Boundary.
  * Guarantees that if a CMS payload, network connection, or dynamic image fails to render,
  * the public website never crashes or shows a white screen. Instead, it gracefully displays
  * fallback layout or local bundled images (`Task 4 Offline & Error Fallback`).
@@ -29,9 +29,9 @@ export class SiteErrorBoundary extends Component<SiteErrorBoundaryProps, SiteErr
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     if (import.meta.env.DEV) {
-      console.warn("[SiteErrorBoundary] Caught public website rendering error (`Task 16`):", error, errorInfo);
+      console.warn("[SiteErrorBoundary] Caught public website rendering error:", error, errorInfo);
     }
-    // Phase 4 Telemetry hook point (`Task 18`)
+    // Phase 4 Telemetry hook point
     if (typeof window !== "undefined") {
       const win = window as any;
       if (!win.__CMS_ANALYTICS_QUEUE) win.__CMS_ANALYTICS_QUEUE = [];

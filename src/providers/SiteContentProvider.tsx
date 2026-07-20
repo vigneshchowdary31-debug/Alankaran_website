@@ -41,11 +41,11 @@ export interface SiteGalleryImage {
 export interface SiteContentContextValue {
   /**
    * Resolves a slot image for the public website (`Task 1, 2, 4, 5`).
-   * Prioritizes Published content (`Task 2`). Falls back to cache or local bundled asset (`Task 4`).
+   * Prioritizes Published content. Falls back to cache or local bundled asset.
    */
   getSlotImage: (sectionKey: SectionKey | string, slotName: string, fallbackUrl: string, fallbackAlt?: string) => SiteSlotResolvedImage;
   /**
-   * Resolves the dynamic gallery collection, ordered by `slot.order` (`Phase A Task 1`).
+   * Resolves the dynamic gallery collection, ordered by `slot.order`.
    * Returns `[]` when the CMS holds no gallery images, letting callers use bundled defaults.
    * This is what the Gallery Manager writes to — the two are the same data.
    */
@@ -55,11 +55,11 @@ export interface SiteContentContextValue {
    */
   getSection: (sectionKey: SectionKey | string) => CMSSectionContent | null;
   /**
-   * Live CMS coverage report for Diagnostics (`Phase A Task 5`).
+   * Live CMS coverage report for Diagnostics.
    */
   getCoverageReport: () => CoverageReport;
   /**
-   * Site-wide contact details from `cmsSiteContent/contact` (`Phase A Task 8`).
+   * Site-wide contact details from `cmsSiteContent/contact`.
    * Falls back field-by-field to `DEFAULT_CONTACT_INFO`, so a partially filled document is safe.
    */
   contactInfo: CMSContactInfo;
@@ -68,11 +68,11 @@ export interface SiteContentContextValue {
    */
   isLoading: boolean;
   /**
-   * Indicates whether browser is currently offline (`Task 4`).
+   * Indicates whether browser is currently offline.
    */
   isOffline: boolean;
   /**
-   * Admin Preview Mode state (`Task 17`). When enabled by an authenticated admin, displays Draft instead of Published.
+   * Admin Preview Mode state. When enabled by an authenticated admin, displays Draft instead of Published.
    */
   previewMode: boolean;
   setPreviewMode: (enabled: boolean) => void;
@@ -86,7 +86,7 @@ const SiteContentContext = createContext<SiteContentContextValue | null>(null);
 
 /**
  * Every section the public website reads, derived from the slot catalog so a new section never has to
- * be registered in two places (`Phase A Task 3`).
+ * be registered in two places.
  */
 const CORE_SECTIONS: SectionKey[] = PUBLIC_SECTIONS;
 
@@ -95,9 +95,9 @@ export interface SiteContentProviderProps {
 }
 
 /**
- * Phase 4 Enterprise SiteContentProvider (`Task 1`).
+ * Phase 4 Enterprise SiteContentProvider.
  * Decouples public website UI from direct Firestore reads.
- * Guarantees Published-Only reads (`Task 2`), Multi-Tier Caching (`Task 3`), and Resilient Offline Fallback (`Task 4`).
+ * Guarantees Published-Only reads, Multi-Tier Caching, and Resilient Offline Fallback.
  */
 export function SiteContentProvider({ children }: SiteContentProviderProps) {
   const { currentUser } = useAuth();
@@ -120,13 +120,13 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
     }
   }, [currentUser, trackEvent]);
 
-  // Monitor network online/offline status (`Task 4`)
+  // Monitor network online/offline status
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => {
       setIsOffline(true);
-      trackEvent("fallback_trigger", "network_offline", undefined, "Switched to offline cache & bundled asset fallback (`Task 4`)");
+      trackEvent("fallback_trigger", "network_offline", undefined, "Switched to offline cache & bundled asset fallback");
     };
 
     window.addEventListener("online", handleOnline);
@@ -137,13 +137,13 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
     };
   }, [trackEvent]);
 
-  // Load section data via Cache Strategy (`Task 3`) + Firestore background sync (`Task 9`)
+  // Load section data via Cache Strategy + Firestore background sync
   const loadSections = useCallback(async (backgroundSync = false) => {
     const startTime = Date.now();
     const loadedMap: Record<string, CMSSectionContent> = { ...sections };
     let anyCacheMiss = false;
 
-    // Step 1: Instant check of Level 1 (Memory) and Level 2 (localStorage) (`Task 3`)
+    // Step 1: Instant check of Level 1 (Memory) and Level 2 (localStorage)
     for (const key of CORE_SECTIONS) {
       const cached = cmsCacheService.get<CMSSectionContent>(key);
       if (cached) {
@@ -184,7 +184,7 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
               return { key, doc: sanitized };
             }
           } catch (err) {
-            // Offline or permission issue, fallback gracefully (`Task 4`)
+            // Offline or permission issue, fallback gracefully
           }
           return { key, doc: null };
         });
@@ -350,7 +350,7 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
 
 /**
  * Public website hook (`useSiteContent`).
- * Guarantees zero direct Firestore calls across public UI components (`Task 1`).
+ * Guarantees zero direct Firestore calls across public UI components.
  */
 export function useSiteContent(): SiteContentContextValue {
   const context = useContext(SiteContentContext);
@@ -361,7 +361,7 @@ export function useSiteContent(): SiteContentContextValue {
 }
 
 /**
- * Convenience hook for the site-wide contact details (`Phase A Task 8`).
+ * Convenience hook for the site-wide contact details.
  * Every phone number, email, address, social link, and WhatsApp URL on the website resolves here.
  */
 export function useContactInfo(): CMSContactInfo {

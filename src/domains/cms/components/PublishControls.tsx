@@ -12,7 +12,7 @@ export interface PublishControlsProps {
 }
 
 /**
- * Phase 3.5 Enterprise Draft & Published Workflow Controls (`Task 1`).
+ * Phase 3.5 Enterprise Draft & Published Workflow Controls.
  * Clearly separates Draft vs Published versions. Guarantees Future Phase 4 live website will only read Published.
  */
 export function PublishControls({ sectionKey, section, onPublish, onRefresh }: PublishControlsProps) {

@@ -12,7 +12,7 @@ export interface VersionHistoryModalProps {
 }
 
 /**
- * Phase 3.5 Enterprise Version History Modal (`Task 2`).
+ * Phase 3.5 Enterprise Version History Modal.
  * Allows administrators to review all historical snapshots, compare structure, and restore cleanly.
  */
 export function VersionHistoryModal({ sectionKey, isOpen, onClose, versions, onRestore }: VersionHistoryModalProps) {
@@ -50,7 +50,7 @@ export function VersionHistoryModal({ sectionKey, isOpen, onClose, versions, onR
                 Version History — {sectionKey.toUpperCase()} Section
               </CardTitle>
               <p className="font-sans text-xs text-stone-400 mt-0.5">
-                Immutable snapshots recorded automatically on each Publish action (`Task 2`).
+                Immutable snapshots recorded automatically on each Publish action.
               </p>
             </div>
           </div>

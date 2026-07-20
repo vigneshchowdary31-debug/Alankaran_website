@@ -13,7 +13,7 @@ import {
 import { ROUTES } from "@/constants/routes";
 
 /**
- * Phase 6 Administrative Page: Gallery & Portfolio Content Manager (`Task 1`).
+ * Phase 6 Administrative Page: Gallery & Portfolio Content Manager.
  * Connects to `GalleryManager` for bulk uploads, drag-and-drop reordering, metadata editing, and device simulation.
  */
 export function AdminGallery() {
@@ -28,8 +28,8 @@ export function AdminGallery() {
       {/* Page Header */}
       <PageHeader
         badge="Phase 6 Enterprise Gallery Management Active"
-        title="Gallery & Portfolio Content Manager (`Task 1`)"
-        description="Comprehensive image management studio for your luxury wedding portfolio. Upload multiple moments in bulk, reorder visually (`Task 3`), categorize across royal themes (`Task 6`), and simulate multi-device grids (`Task 8`) before publishing."
+        title="Gallery & Portfolio Content Manager"
+        description="Comprehensive image management studio for your luxury wedding portfolio. Upload multiple moments in bulk, reorder visually, categorize across royal themes, and simulate multi-device grids before publishing."
       >
         <Link href={ROUTES.ADMIN.DASHBOARD}>
           <Button variant="outline" size="sm" className="gap-2 text-xs font-sans border-stone-700 bg-stone-900 text-stone-300">

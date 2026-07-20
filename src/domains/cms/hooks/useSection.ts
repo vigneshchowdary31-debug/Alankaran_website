@@ -16,7 +16,7 @@ export interface UseSectionReturn {
 
 /**
  * Generic real-time subscription hook for any CMS section (`hero`, `about`, `services`, `gallery`).
- * Manages loading/saving mutation states, guarantees Optimistic UI with automatic rollback (`Task 5`),
+ * Manages loading/saving mutation states, guarantees Optimistic UI with automatic rollback,
  * and synchronizes multi-tab sessions via Firestore snapshot listeners.
  */
 export function useSection(sectionKey: SectionKey | string): UseSectionReturn {
@@ -66,7 +66,7 @@ export function useSection(sectionKey: SectionKey | string): UseSectionReturn {
 
   const saveSlot = useCallback(
     async (slotName: string, metadata: CMSSlotMetadata): Promise<boolean> => {
-      // Optimistic UI Backup (`Task 5`)
+      // Optimistic UI Backup
       const backup = { ...section };
       try {
         setStatus("saving");
@@ -87,7 +87,7 @@ export function useSection(sectionKey: SectionKey | string): UseSectionReturn {
         setStatus("success");
         return true;
       } catch (err: any) {
-        // Automatic Rollback (`Task 5`)
+        // Automatic Rollback
         setSection(backup);
         const msg = err.message || "Failed to save slot metadata to Firestore.";
         setError(msg);

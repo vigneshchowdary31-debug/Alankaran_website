@@ -77,7 +77,7 @@ class SlotCoverageService {
   }
 
   /**
-   * Called by `SiteContentProvider.getSlotImage` on every resolution (`Task 4`).
+   * Called by `SiteContentProvider.getSlotImage` on every resolution.
    */
   record(sectionKey: string, slotName: string, resolvedFromCMS: boolean, fallbackUrl?: string): void {
     const key = this.key(sectionKey, slotName);

@@ -42,7 +42,7 @@ class InquiryService {
 
     await firestoreService.save(FirestorePaths.inquiry(id), record);
 
-    // Notify the admin through the existing Activity Log rather than a new channel (`Task 7`).
+    // Notify the admin through the existing Activity Log rather than a new channel.
     // Fire-and-forget: a logging failure must never fail the visitor's submission.
     auditLogService.log(
       "Inquiry",

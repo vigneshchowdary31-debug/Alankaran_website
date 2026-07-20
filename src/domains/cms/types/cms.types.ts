@@ -71,7 +71,7 @@ export interface CMSSettings {
 export type CMSMutationState = "idle" | "loading" | "saving" | "updating" | "deleting" | "error" | "success";
 
 /**
- * Phase 3.5 Draft and Published Workflow (`Task 1`).
+ * Phase 3.5 Draft and Published Workflow.
  * Every section maintains both its working Draft (`slots` or `draftSlots`) and its immutable Published state (`publishedSlots`).
  */
 export interface CMSSectionWithPublishing extends CMSSectionContent {
@@ -83,7 +83,7 @@ export interface CMSSectionWithPublishing extends CMSSectionContent {
 }
 
 /**
- * Phase 3.5 Version History Snapshot (`Task 2`).
+ * Phase 3.5 Version History Snapshot.
  * Stored inside `cmsVersions/{sectionKey}_{versionId}` on every Publish action.
  */
 export interface CMSVersionSnapshot {
@@ -98,7 +98,7 @@ export interface CMSVersionSnapshot {
 }
 
 /**
- * Phase 3.5 Soft Delete Trash Record (`Task 3`).
+ * Phase 3.5 Soft Delete Trash Record.
  * Stored inside `cmsTrash/{trashId}` when an image slot or record is deleted.
  */
 export interface CMSTrashRecord {
@@ -113,7 +113,7 @@ export interface CMSTrashRecord {
 }
 
 /**
- * Phase 3.5 Audit Log Action Types and Entry Model (`Task 10`).
+ * Phase 3.5 Audit Log Action Types and Entry Model.
  * Stored inside `cmsAuditLogs/{logId}`. Exclusively accessible by administrators.
  */
 export type AuditActionType = "Upload" | "Replace" | "Delete" | "Publish" | "Restore" | "Login" | "Logout" | "Cache_Clear" | "Inquiry";
@@ -128,7 +128,7 @@ export interface CMSAuditLogEntry {
 }
 
 /**
- * Phase 3.5 CMS Health & Diagnostic Status Report (`Task 8`).
+ * Phase 3.5 CMS Health & Diagnostic Status Report.
  */
 export interface CMSHealthReport {
   score: number; // 0 to 100
@@ -144,7 +144,7 @@ export interface CMSHealthReport {
 }
 
 /**
- * Phase 3.5 Cache Layer Entry Model (`Task 6`).
+ * Phase 3.5 Cache Layer Entry Model.
  */
 export interface CMSCacheEntry<T> {
   data: T;
@@ -154,7 +154,7 @@ export interface CMSCacheEntry<T> {
 }
 
 /**
- * Phase 3.5 Image Usage Tracking Reference (`Task 9`).
+ * Phase 3.5 Image Usage Tracking Reference.
  */
 export interface ImageUsageReference {
   slotId: string;
@@ -166,7 +166,7 @@ export interface ImageUsageReference {
 }
 
 /**
- * Phase 4 CMS System Configuration Schema (`Task 14`).
+ * Phase 4 CMS System Configuration Schema.
  * Stored under `cmsSettings/system` in Firestore.
  */
 export interface CMSSystemConfig {
@@ -186,7 +186,7 @@ export interface CMSSystemConfig {
 }
 
 /**
- * Phase 4 Content Locking Architecture (`Task 10`).
+ * Phase 4 Content Locking Architecture.
  * Prevents simultaneous administrative overwrites when multiple admins edit the same section.
  */
 export interface ContentEditLock {
@@ -198,7 +198,7 @@ export interface ContentEditLock {
 }
 
 /**
- * Phase 4 Scheduled Publishing Architecture (`Task 11`).
+ * Phase 4 Scheduled Publishing Architecture.
  * Prepares system for future scheduled publishing without requiring immediate cron execution.
  */
 export interface ScheduledPublication {
@@ -213,7 +213,7 @@ export interface ScheduledPublication {
 }
 
 /**
- * Phase 4 Approval Workflow Architecture (`Task 12`).
+ * Phase 4 Approval Workflow Architecture.
  * Defines role hierarchy (`viewer -> editor -> admin -> owner`) and review state progression.
  */
 export type RoleHierarchyLevel = "viewer" | "editor" | "admin" | "owner";
@@ -231,7 +231,7 @@ export interface ApprovalWorkflowRecord {
 }
 
 /**
- * Phase 4 Analytics & Telemetry Event (`Task 18`).
+ * Phase 4 Analytics & Telemetry Event.
  */
 export type CMSAnalyticsEventType = "load" | "update" | "cache_hit" | "cache_miss" | "fallback_trigger";
 

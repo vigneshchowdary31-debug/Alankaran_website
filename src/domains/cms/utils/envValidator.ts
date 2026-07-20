@@ -2,7 +2,7 @@ import { cloudinaryConfig } from "@/config/cloudinary";
 import { firebaseDb } from "@/lib/firebase";
 
 /**
- * Phase 3.5 Enterprise Environment Validator (`Task 11`).
+ * Phase 3.5 Enterprise Environment Validator.
  * Validates Cloudinary CDN, Firebase Auth, and Firestore config without exposing secrets.
  * Provides user-friendly diagnostic statuses for administrative inspection.
  */

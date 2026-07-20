@@ -169,13 +169,13 @@ export interface IFirestoreService {
   ): Unsubscribe;
 
   /**
-   * Executes atomic Firestore transactions (`Task 4`).
+   * Executes atomic Firestore transactions.
    * Guarantees all multi-document operations succeed or fail as a single atomic unit.
    */
   runTransaction<T>(updateFunction: (transaction: Transaction) => Promise<T>): Promise<T>;
 
   /**
-   * Executes batched Firestore writes (`Task 4`).
+   * Executes batched Firestore writes.
    */
   executeBatch(operations: (batch: WriteBatch) => void): Promise<void>;
 }

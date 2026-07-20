@@ -3,7 +3,7 @@ import type { CMSSystemConfig } from "../types";
 import { CACHE_CONFIG } from "../constants";
 
 /**
- * Default System Configuration values used when Firestore doc has not been initialized (`Task 14`).
+ * Default System Configuration values used when Firestore doc has not been initialized.
  */
 export const DEFAULT_SYSTEM_CONFIG: CMSSystemConfig = {
   cacheTTL: CACHE_CONFIG.DEFAULT_TTL_MS, // 30 minutes
@@ -22,7 +22,7 @@ export const DEFAULT_SYSTEM_CONFIG: CMSSystemConfig = {
 };
 
 /**
- * Phase 4 CMS System Configuration Service (`Task 14`).
+ * Phase 4 CMS System Configuration Service.
  * Centralizes all CMS runtime parameters inside `cmsSettings/system` in Firestore.
  */
 class SystemConfigService {
