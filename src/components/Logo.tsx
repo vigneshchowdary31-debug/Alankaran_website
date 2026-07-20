@@ -1,7 +1,28 @@
+import { useSiteContent } from "@/providers/SiteContentProvider";
+
 interface LogoProps {
   size?: number;
   showText?: boolean;
   textColor?: string;
+}
+
+/**
+ * Resolves the CMS logo, if one has been published.
+ *
+ * Deliberately defensive: `useSiteContent` throws outside its provider, and `Logo` is a generic
+ * component that could legitimately be mounted somewhere the provider is absent (an admin shell, a
+ * test, a future standalone page). Falling back to the built-in vector there is strictly better than
+ * crashing the whole tree over a logo.
+ */
+function useCmsLogoUrl(): string | null {
+  try {
+    const { getSlotImage } = useSiteContent();
+    // Empty fallback => a published slot returns its URL, an unset slot returns "".
+    const resolved = getSlotImage("contact", "site_logo", "", "Alankaran").url;
+    return resolved || null;
+  } catch {
+    return null;
+  }
 }
 
 export default function Logo({ size = 52, showText = true, textColor = "hsl(var(--foreground))" }: LogoProps) {
@@ -10,6 +31,41 @@ export default function Logo({ size = 52, showText = true, textColor = "hsl(var(
 
   const calculatedTextSize = size ? `${Math.max(0.85, (size / 52) * 1.35)}rem` : "1.35rem";
   const calculatedGap = size < 40 ? "gap-2" : "gap-3";
+
+  const cmsLogoUrl = useCmsLogoUrl();
+
+  // A published CMS logo replaces the vector mark only. The wordmark keeps its `textColor`, so the
+  // Footer's light-on-dark lockup still works with an uploaded mark.
+  if (cmsLogoUrl) {
+    return (
+      <div className={`flex items-center ${calculatedGap} select-none`}>
+        <img
+          src={cmsLogoUrl}
+          alt="Alankaran"
+          width={size}
+          height={Math.round(size * 1.15)}
+          style={{ width: size, height: Math.round(size * 1.15), objectFit: "contain" }}
+          decoding="async"
+        />
+        {showText && (
+          <div className="flex flex-col leading-none">
+            <span
+              style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: calculatedTextSize,
+                letterSpacing: "0.22em",
+                color: textColor,
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              ALANKARAN
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`flex items-center ${calculatedGap} select-none`}>

@@ -12,6 +12,7 @@ import { cmsCacheService, auditLogService, slotCoverageService } from "@/domains
 import type { CMSSectionContent, SectionKey, CMSSlotMetadata, CMSContactInfo } from "@/domains/cms/types";
 import { PUBLIC_SECTIONS, DEFAULT_CONTACT_INFO } from "@/domains/cms/constants";
 import { resolveGalleryImages, selectPublicSlotMap } from "@/domains/cms/utils/galleryResolver";
+import { resolvePublicationState } from "@/domains/cms/utils/globalSettingsDiff";
 import type { CoverageReport } from "@/domains/cms/services/slotCoverage.service";
 import { useAuth } from "@/context/AuthContext";
 import { useCMSAnalytics } from "@/domains/cms/hooks/useCMSAnalytics";
@@ -229,14 +230,17 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
       const section = sections[sectionKey] as any;
       const isCached = Boolean(cmsCacheService.get(sectionKey));
 
-      // Task 17 & Task 2: If previewMode is enabled AND user is authenticated admin, read Draft slots (`slots`).
-      // Otherwise, ALWAYS read `publishedSlots` (falling back to `slots` only when `publishedSlots` hasn't been explicitly created yet on legacy phase 3 records).
-      let slot: CMSSlotMetadata | undefined;
-      if (previewMode && currentUser) {
-        slot = section?.slots?.[slotName] || section?.draftSlots?.[slotName];
-      } else {
-        slot = section?.publishedSlots?.[slotName] || section?.slots?.[slotName];
-      }
+      // Which slot map the public site reads. This delegates to `selectPublicSlotMap` so named slots
+      // and the gallery collection resolve publish state through exactly one implementation.
+      //
+      // The map is chosen ONCE and then indexed — it is NOT a per-slot `publishedSlots?.[name] ||
+      // slots?.[name]` fallback. That per-slot form leaked unpublished drafts to the live site: for a
+      // section that had been published at least once, any slot missing from `publishedSlots` fell
+      // through to the draft in `slots` and went live without ever being published. The map-level
+      // fallback still covers legacy records that predate the publish workflow (no `publishedSlots`
+      // key at all), which is the only case it was meant to handle.
+      const slotMap = selectPublicSlotMap(section, previewMode && Boolean(currentUser));
+      const slot: CMSSlotMetadata | undefined = slotMap[slotName];
 
       if (slot && slot.url) {
         // Phase A Task 4: record the hit so Diagnostics can report real coverage.
@@ -294,7 +298,14 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
    * image slots). Merged over the bundled defaults so a missing or partial record still renders.
    */
   const contactInfo = useMemo<CMSContactInfo>(() => {
-    const stored = (sections["contact"] as any)?.contact;
+    const section = sections["contact"] as any;
+
+    // Publication state is resolved by the shared helper — the same one the editor and Diagnostics
+    // use — so the website can never disagree with what the CMS reports as live. Admins in Preview
+    // Mode see the working draft; everyone else sees the live record.
+    const { draft, live } = resolvePublicationState(section, DEFAULT_CONTACT_INFO);
+    const stored = previewMode && currentUser ? draft || live : live;
+
     if (!stored || typeof stored !== "object") return DEFAULT_CONTACT_INFO;
     return {
       ...DEFAULT_CONTACT_INFO,
@@ -304,7 +315,7 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
       emails: stored.emails?.length ? stored.emails : DEFAULT_CONTACT_INFO.emails,
       studios: stored.studios?.length ? stored.studios : DEFAULT_CONTACT_INFO.studios,
     };
-  }, [sections]);
+  }, [sections, previewMode, currentUser]);
 
   const value = useMemo(
     () => ({

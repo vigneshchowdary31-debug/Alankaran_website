@@ -93,10 +93,16 @@ export const SLOT_CATALOG: SectionDefinition[] = [
     folder: "alankaran_website/about",
     slots: [
       {
-        slotName: "about_portrait",
-        label: "About Hero & Collage Portrait",
-        description: "Recommended: 1080 × 1350 px (vertical 4:5). High-res portrait.",
-        usage: "About page hero background · Brand Story collage tile 2",
+        slotName: "about_hero",
+        label: "About Hero Background",
+        description: "Recommended: 1920 × 1080 px (landscape).",
+        usage: "About page hero background only",
+      },
+      {
+        slotName: "about_collage_3",
+        label: "Brand Story — Collage Tile 2",
+        description: "Recommended: 800 × 800 px (square).",
+        usage: "About page Brand Story, second small tile",
       },
       {
         slotName: "about_collage_1",
@@ -127,56 +133,76 @@ export const SLOT_CATALOG: SectionDefinition[] = [
   {
     sectionKey: "services",
     title: "Services Page",
-    description: "The eight images cycled across the services grid and hero.",
+    description:
+      "One image per service card, plus the page hero. Each slot maps to exactly one card — the slot " +
+      "order below is the render order in the services grid.",
     folder: "alankaran_website/services",
     slots: [
       {
-        slotName: "service_mandap",
-        label: "Services Hero — Royal Mandap",
+        slotName: "services_hero",
+        label: "Services Hero Background",
         description: "Recommended: 1600 × 900 px (wide landscape).",
-        usage: "Services page hero background · services grid card 1",
+        usage: "Services page hero background only",
       },
       {
-        slotName: "service_decor",
-        label: "Bespoke Decor Detail",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 2",
+        slotName: "service_wedding_planning",
+        label: "Card 1 — Wedding Planning",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 1 · “Wedding Planning”",
       },
       {
-        slotName: "service_floral",
-        label: "Artisanal Floral Arrangement",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 3",
+        slotName: "service_luxury_decor",
+        label: "Card 2 — Luxury Wedding Decor",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 2 · “Luxury Wedding Decor”",
       },
       {
-        slotName: "service_stage",
-        label: "Wedding Stage Design",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 4",
+        slotName: "service_floral_styling",
+        label: "Card 3 — Floral Styling",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 3 · “Floral Styling”",
       },
       {
-        slotName: "service_bridal",
-        label: "Bridal Entry Concept",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 5",
+        slotName: "service_mandap_design",
+        label: "Card 4 — Mandap Design",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 4 · “Mandap Design”",
       },
       {
-        slotName: "service_engagement",
-        label: "Engagement Decor",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 6",
+        slotName: "service_engagement_decor",
+        label: "Card 5 — Engagement Decor",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 5 · “Engagement Decor”",
       },
       {
-        slotName: "service_reception",
-        label: "Reception Styling",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 7",
+        slotName: "service_reception_styling",
+        label: "Card 6 — Reception Styling",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 6 · “Reception Styling”",
       },
       {
-        slotName: "service_detail",
-        label: "Custom Event Styling",
-        description: "Recommended: 1200 × 900 px.",
-        usage: "Services grid card 8",
+        slotName: "service_royal_theme",
+        label: "Card 7 — Royal Theme Weddings",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 7 · “Royal Theme Weddings”",
+      },
+      {
+        slotName: "service_stage_design",
+        label: "Card 8 — Wedding Stage Design",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 8 · “Wedding Stage Design”",
+      },
+      {
+        slotName: "service_bridal_entry",
+        label: "Card 9 — Bridal Entry Concepts",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 9 · “Bridal Entry Concepts”",
+      },
+      {
+        slotName: "service_custom_styling",
+        label: "Card 10 — Custom Event Styling",
+        description: "Recommended: 1200 × 900 px (16:9).",
+        usage: "Services grid card 10 · “Custom Event Styling”",
       },
     ],
   },
@@ -197,7 +223,9 @@ export const SLOT_CATALOG: SectionDefinition[] = [
   {
     sectionKey: "contact",
     title: "Contact Page",
-    description: "Imagery on the contact page.",
+    description:
+      "Imagery on the contact page, plus the site-wide logo. The global text settings (phone, " +
+      "email, WhatsApp, address, map, social links) live on this same document.",
     folder: "alankaran_website/contact",
     slots: [
       {
@@ -205,6 +233,14 @@ export const SLOT_CATALOG: SectionDefinition[] = [
         label: "Contact Hero Background",
         description: "Recommended: 1920 × 1080 px (landscape).",
         usage: "Contact page hero background",
+      },
+      {
+        slotName: "site_logo",
+        label: "Website Logo",
+        description:
+          "Recommended: transparent PNG or SVG, at least 200 × 230 px. Leave empty to keep the " +
+          "built-in vector logo.",
+        usage: "Navbar (desktop + mobile menu) · Footer — every logo on the website",
       },
     ],
   },

@@ -61,16 +61,36 @@ const services = [
 export default function Services() {
   const { getSlotImage } = useSiteContent();
 
-  const images = [
-    getSlotImage("services", "service_mandap", "/images/royal_mandap.webp", "Royal Mandap Architectural Cover").url,
-    getSlotImage("services", "service_decor", "/images/coastal_wedding.webp", "Bespoke Decor Detail").url,
-    getSlotImage("services", "service_floral", "/images/mughal_garden.webp", "Artisanal Floral Arrangement").url,
-    getSlotImage("services", "service_stage", "/images/floral_stage.webp", "Wedding Stage Design").url,
-    getSlotImage("services", "service_bridal", "/images/bridal_entry.webp", "Bridal Entry Concept").url,
-    getSlotImage("services", "service_engagement", "/images/engagement_decor.webp", "Engagement Decor").url,
-    getSlotImage("services", "service_reception", "/images/grand_reception.webp", "Reception Styling").url,
-    getSlotImage("services", "service_detail", "/images/floral_detail.webp", "Custom Event Styling").url,
+  // One CMS slot per rendered image, in grid order. The hero has its own dedicated slot so that
+  // editing it cannot alter any grid card. `cardImages` is indexed 1:1 with `services` — never with
+  // a modulo — so card N is driven only by slot N. Adding a service REQUIRES adding its slot to
+  // SLOT_CATALOG; the length assertion below fails loudly in dev if the two ever drift.
+  const heroImage = getSlotImage(
+    "services",
+    "services_hero",
+    "/images/royal_mandap.webp",
+    "Alankaran Signature Services"
+  ).url;
+
+  const cardImages = [
+    getSlotImage("services", "service_wedding_planning", "/images/royal_mandap.webp", "Wedding Planning").url,
+    getSlotImage("services", "service_luxury_decor", "/images/coastal_wedding.webp", "Luxury Wedding Decor").url,
+    getSlotImage("services", "service_floral_styling", "/images/mughal_garden.webp", "Floral Styling").url,
+    getSlotImage("services", "service_mandap_design", "/images/floral_stage.webp", "Mandap Design").url,
+    getSlotImage("services", "service_engagement_decor", "/images/engagement_decor.webp", "Engagement Decor").url,
+    getSlotImage("services", "service_reception_styling", "/images/grand_reception.webp", "Reception Styling").url,
+    getSlotImage("services", "service_royal_theme", "/images/mandap_floral_detail.webp", "Royal Theme Weddings").url,
+    getSlotImage("services", "service_stage_design", "/images/floral_detail.webp", "Wedding Stage Design").url,
+    getSlotImage("services", "service_bridal_entry", "/images/bridal_entry.webp", "Bridal Entry Concepts").url,
+    getSlotImage("services", "service_custom_styling", "/images/coastal_sunset_wedding.webp", "Custom Event Styling").url,
   ];
+
+  if (import.meta.env.DEV && cardImages.length !== services.length) {
+    console.error(
+      `[Services] CMS mapping drift: ${services.length} service cards but ${cardImages.length} image slots. ` +
+        `Every card must have its own slot or cards will share images.`
+    );
+  }
   return (
     <div className="bg-background text-foreground">
       <SEO
@@ -93,7 +113,7 @@ export default function Services() {
       />
       {/* Hero */}
       <section className="relative h-[65vh] flex items-end pb-20 overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${images[0]})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
         <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.4) 100%)" }} />
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12 z-20">
           <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>What We Offer</m.p>
@@ -126,7 +146,7 @@ export default function Services() {
               data-testid={`service-card-${i}`}
             >
               <div className="overflow-hidden aspect-[16/9]">
-                <div className="w-full h-full transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${images[i % images.length]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                <div className="w-full h-full transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${cardImages[i]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
               </div>
               <div className="p-8">
                 <p className="section-label mb-3 text-gold/80 tracking-widest">{s.tag}</p>

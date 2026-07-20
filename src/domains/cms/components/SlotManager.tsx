@@ -5,6 +5,7 @@ import { ImageUpload } from "@/components/admin/ui/upload/ImageUpload";
 import type { ImageAsset } from "@/types";
 import { Loader2, Database } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
+import { useAuth } from "@/context/AuthContext";
 
 export interface SlotManagerProps {
   sectionKey: SectionKey | string;
@@ -27,7 +28,8 @@ export function SlotManager({
   description,
   className,
 }: SlotManagerProps) {
-  const { section, status, error, getSlot, saveSlot } = useSection(sectionKey);
+  const { section, status, error, getSlot, saveSlot, softDelete } = useSection(sectionKey);
+  const { currentUser } = useAuth();
 
   const savedSlot: CMSSlotMetadata | undefined = getSlot(slotName);
 
@@ -83,6 +85,29 @@ export function SlotManager({
     }
   };
 
+  /**
+   * Persist the removal.
+   *
+   * `ImageUpload` only clears its own React state when the Remove dialog is confirmed — it has no
+   * knowledge of Firestore. Without this callback the slot was never soft-deleted: no trash record
+   * was written, the Firestore document kept the slot, and the image reappeared on the next reload
+   * while the site went on rendering it. This is the CMS-side half of the delete.
+   */
+  const handleRemoveSuccess = async () => {
+    const ok = await softDelete(slotName, currentUser?.email || "admin@alankaran.com");
+    if (ok) {
+      showSuccess(
+        "Moved to Trash",
+        `"${label || slotName}" was removed from ${sectionKey} and archived in Trash. Publish the section to take it off the live site.`
+      );
+    } else {
+      showError(
+        "Delete Failed",
+        `"${label || slotName}" could not be removed from cmsSiteContent/${sectionKey}. It is still live — see the console for the document path and error code.`
+      );
+    }
+  };
+
   return (
     <div className="relative">
       {/* ── Status Bar for Section Synchronization ── */}
@@ -107,6 +132,7 @@ export function SlotManager({
         description={description}
         initialAsset={initialAsset}
         onUploadSuccess={handleUploadSuccess}
+        onRemoveSuccess={handleRemoveSuccess}
         className={className}
       />
     </div>

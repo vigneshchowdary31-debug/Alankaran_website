@@ -33,6 +33,8 @@ import { cmsHealthService, cmsCacheService, cmsService, slotCoverageService } fr
 import type { CMSHealthReport, CMSSectionContent } from "@/domains/cms/types";
 import type { CoverageReport } from "@/domains/cms/services/slotCoverage.service";
 import { PUBLIC_SECTIONS } from "@/domains/cms/constants";
+import { TOTAL_GLOBAL_SETTINGS } from "@/domains/cms/utils/globalSettingsValidator";
+import { buildGlobalSettingsStatus } from "@/domains/cms/utils/globalSettingsDiff";
 import { useAuth } from "@/context/AuthContext";
 import { ROUTES, APP_CONFIG } from "@/constants";
 
@@ -49,6 +51,16 @@ export function AdminDebug() {
   const [testingRecovery, setTestingRecovery] = useState<boolean>(false);
   const [recoveryMsg, setRecoveryMsg] = useState<string | null>(null);
   const [coverage, setCoverage] = useState<CoverageReport | null>(null);
+  // Global website settings coverage: how many of the settings the site renders are filled in
+  // the draft, and how many are actually published (i.e. live for real visitors).
+  // Uses the SAME comparison the editor badges use (`buildGlobalSettingsStatus`), so Diagnostics
+  // and the Global Settings page can never disagree about what is published.
+  const [globalSettings, setGlobalSettings] = useState({
+    configured: 0,
+    draft: 0,
+    published: TOTAL_GLOBAL_SETTINGS,
+    total: TOTAL_GLOBAL_SETTINGS,
+  });
 
   const runDiagnostics = async () => {
     try {
@@ -80,6 +92,25 @@ export function AdminDebug() {
 
   useEffect(() => {
     runDiagnostics();
+  }, [currentUser]);
+
+  useEffect(() => {
+    let cancelled = false;
+    cmsService
+      .loadGlobalSettings()
+      .then(({ draft, live }) => {
+        if (cancelled) return;
+        setGlobalSettings(buildGlobalSettingsStatus(draft, live));
+      })
+      .catch(() => {
+        // Diagnostics must never crash on a failed read. Report nothing configured rather than
+        // inventing a healthy-looking number.
+        if (!cancelled)
+          setGlobalSettings({ configured: 0, draft: 0, published: 0, total: TOTAL_GLOBAL_SETTINGS });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser]);
 
   const handleClearCache = () => {
@@ -320,6 +351,23 @@ export function AdminDebug() {
                 Images {coverage.totalConfigured} / {coverage.totalExpected} ({coverage.imageCoverage}%)
               </div>
             )}
+
+            {/* Global website settings — only the settings the site actually renders are counted. */}
+            <div
+              className={`px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold ${
+                globalSettings.published === TOTAL_GLOBAL_SETTINGS
+                  ? "text-emerald-400 border-emerald-800/80 bg-emerald-950/40"
+                  : globalSettings.draft > 0
+                    ? "text-amber-400 border-amber-800/80 bg-amber-950/40"
+                    : "text-rose-400 border-rose-800/80 bg-rose-950/40"
+              }`}
+              title="Configured = filled in the draft · Published = live on the website"
+            >
+              Global Settings {globalSettings.published} / {globalSettings.total} published
+              <span className="ml-2 font-normal opacity-80">
+                ({globalSettings.configured} configured{globalSettings.draft > 0 ? `, ${globalSettings.draft} draft` : ""})
+              </span>
+            </div>
           </div>
         </CardHeader>
 

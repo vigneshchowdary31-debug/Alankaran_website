@@ -58,7 +58,7 @@ function WeddingImage({ image, aspectClass = "aspect-[4/5]", label = "" }: { ima
 }
 
 export default function HomeBelowFold({ pulseHighlight }: { pulseHighlight: boolean }) {
-  const { getSlotImage, getGalleryImages } = useSiteContent();
+  const { getGalleryImages } = useSiteContent();
 
   // Phase A Task 1: the home page showcases the CMS gallery collection in published order. Each
   // position falls back to its bundled asset until the admin has uploaded that many gallery images.
@@ -77,10 +77,14 @@ export default function HomeBelowFold({ pulseHighlight }: { pulseHighlight: bool
   ];
 
   const mandapDetailImage = pick(8, "/images/mandap_floral_detail.webp");
+
+  // Every tile below the fold is driven by the gallery collection. This deliberately does NOT reuse
+  // `hero.hero_slide_3` — doing so meant replacing Hero Slide 3 silently changed this cinematic tile
+  // too, so one CMS card controlled two unrelated places on the page.
   const cinematicImages = [
-    getSlotImage("hero", "hero_slide_3", "/images/cinematic_floral_wedding.webp").url,
-    pick(9, "/images/coastal_sunset_wedding.webp"),
-    pick(10, "/images/royal_palace_reception.webp"),
+    pick(9, "/images/cinematic_floral_wedding.webp"),
+    pick(10, "/images/coastal_sunset_wedding.webp"),
+    pick(11, "/images/royal_palace_reception.webp"),
   ];
 
   return (

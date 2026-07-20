@@ -5,3 +5,4 @@ export { AdminImages } from "./Images";
 export { AdminDebug } from "./Debug";
 export { AdminGallery } from "./Gallery";
 export { AdminActivityLog } from "./ActivityLog";
+export { AdminSettings } from "./Settings";

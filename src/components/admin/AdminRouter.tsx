@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { AdminLayout } from "./AdminLayout";
-import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, AdminGallery, AdminActivityLog, PlaceholderPage } from "@/pages/admin";
+import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, AdminGallery, AdminActivityLog, AdminSettings, PlaceholderPage } from "@/pages/admin";
 import { ROUTES } from "@/constants/routes";
 
 export function AdminRouter() {
@@ -60,17 +60,7 @@ export function AdminRouter() {
         component={() => (
           <ProtectedRoute>
             <AdminLayout>
-              <PlaceholderPage
-                title="CMS Configuration Settings"
-                phase="Future Extension"
-                description="Manage global site settings, administrator email credentials, and Firestore cache expiration rules."
-                upcomingFeatures={[
-                  "Update Administrator login email and password securely",
-                  "Configure Cloudinary folder naming conventions (`{section}_{slug}_{timestamp}`)",
-                  "Manage contact phone number, WhatsApp link, and social media handles",
-                  "Review live Firestore read quota metrics and storage status",
-                ]}
-              />
+              <AdminSettings />
             </AdminLayout>
           </ProtectedRoute>
         )}

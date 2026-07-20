@@ -15,10 +15,14 @@ const values = [
 export default function About() {
   const { getSlotImage } = useSiteContent();
 
+  // One slot per rendered position. `about_hero` is dedicated to the hero: it previously shared
+  // `about_portrait` with the collage tile below, so editing the hero also changed the collage.
+  const heroImage = getSlotImage("about", "about_hero", "/images/royal_mandap.webp", "Alankaran — Our Story").url;
+
   const images = [
-    getSlotImage("about", "about_portrait", "/images/royal_mandap.webp", "Royal Mandap Portrait").url,
     getSlotImage("about", "about_collage_1", "/images/coastal_wedding.webp", "Coastal Wedding Detail").url,
     getSlotImage("about", "about_collage_2", "/images/mughal_garden.webp", "Mughal Garden Detail").url,
+    getSlotImage("about", "about_collage_3", "/images/royal_mandap.webp", "Royal Mandap Detail").url,
     getSlotImage("about", "about_floral_stage", "/images/floral_stage.webp", "Floral Stage Detail").url,
   ];
 
@@ -42,7 +46,7 @@ export default function About() {
       />
       {/* Hero */}
       <section className="relative h-[70vh] flex items-end pb-20 overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${images[0]})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
         <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.4) 100%)" }} />
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12 z-20">
           <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
@@ -71,10 +75,10 @@ export default function About() {
             </p>
           </div>
           <div className="space-y-4">
-            <div className="aspect-[4/3] gsap-reveal" style={{ backgroundImage: `url(${images[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+            <div className="aspect-[4/3] gsap-reveal" style={{ backgroundImage: `url(${images[0]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             <div className="grid grid-cols-2 gap-4 gsap-reveal">
+              <div className="aspect-square" style={{ backgroundImage: `url(${images[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
               <div className="aspect-square" style={{ backgroundImage: `url(${images[2]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div className="aspect-square" style={{ backgroundImage: `url(${images[0]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             </div>
           </div>
         </section>

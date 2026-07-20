@@ -296,3 +296,22 @@ export interface CMSContactInfo {
   updatedAt?: number;
   updatedBy?: string;
 }
+
+/**
+ * The seven editable global text settings, in the order the admin editor renders them.
+ * Derived from `CMSContactInfo` so the two can never drift.
+ */
+export type GlobalSettingField =
+  | "phones"
+  | "emails"
+  | "addressLine"
+  | "mapQuery"
+  | "whatsappNumber"
+  | "instagramUrl"
+  | "facebookUrl";
+
+/** Result of validating a single global setting. */
+export interface GlobalSettingValidation {
+  valid: boolean;
+  error?: string;
+}

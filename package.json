@@ -7,7 +7,9 @@
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "vite build --outDir dist/static && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/prerender.mjs",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -73,6 +75,7 @@
     "typescript": "^6.0.3",
     "vaul": "^1.1.2",
     "vite": "latest",
+    "vitest": "^3.2.7",
     "wouter": "^3.3.5",
     "zod": "latest"
   },

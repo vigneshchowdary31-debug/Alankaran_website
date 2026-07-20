@@ -277,6 +277,47 @@ export function GalleryManager() {
     return ok;
   };
 
+  const handleTrashRestoreMany = async (trashIds: string[]) => {
+    const result = await cmsService.restoreManyFromTrash(
+      trashIds,
+      currentUser?.email || "admin@alankaran.com"
+    );
+    // Refresh both the trash list and the gallery — restored slots reappear in the grid.
+    await Promise.all([loadTrashItems(), loadGallerySection()]);
+
+    if (result.failed.length === 0) {
+      showSuccess("Restored", `${result.succeeded.length} item(s) returned to their original slots.`);
+    } else if (result.succeeded.length > 0) {
+      showError(
+        "Partially Restored",
+        `${result.succeeded.length} restored, ${result.failed.length} failed. See the summary in Trash.`
+      );
+    } else {
+      showError("Restore Failed", result.failed[0]?.error || "No items could be restored.");
+    }
+    return result;
+  };
+
+  const handleTrashPermanentDeleteMany = async (trashIds: string[]) => {
+    const result = await cmsService.permanentDeleteManyTrash(
+      trashIds,
+      currentUser?.email || "admin@alankaran.com"
+    );
+    await loadTrashItems();
+
+    if (result.failed.length === 0) {
+      showSuccess("Permanently Deleted", `${result.succeeded.length} item(s) purged from the CMS.`);
+    } else if (result.succeeded.length > 0) {
+      showError(
+        "Partially Deleted",
+        `${result.succeeded.length} purged, ${result.failed.length} failed. See the summary in Trash.`
+      );
+    } else {
+      showError("Delete Failed", result.failed[0]?.error || "No items could be purged.");
+    }
+    return result;
+  };
+
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 select-none animate-fade-in" role="region" aria-label="Gallery Manager">
@@ -743,7 +784,15 @@ export function GalleryManager() {
       <BulkUploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} sectionKey="gallery" existingSlotCount={allSlots.length} onUploadComplete={loadGallerySection} />
       <GalleryMetadataModal isOpen={Boolean(editingSlot)} onClose={() => setEditingSlot(null)} slot={editingSlot} onSave={() => { setEditingSlot(null); loadGallerySection(); }} />
       <GalleryPreviewModal isOpen={previewModalOpen} onClose={() => setPreviewModalOpen(false)} slots={((section as any)?.draftSlots || section?.slots || {}) as Record<string, CMSSlotMetadata>} isPreviewingDraft={true} />
-      <TrashModal isOpen={trashModalOpen} onClose={() => { setTrashModalOpen(false); loadGallerySection(); }} items={trashItems} onRestore={handleTrashRestore} onPermanentDelete={handleTrashPermanentDelete} />
+      <TrashModal
+        isOpen={trashModalOpen}
+        onClose={() => { setTrashModalOpen(false); loadGallerySection(); }}
+        items={trashItems}
+        onRestore={handleTrashRestore}
+        onPermanentDelete={handleTrashPermanentDelete}
+        onRestoreMany={handleTrashRestoreMany}
+        onPermanentDeleteMany={handleTrashPermanentDeleteMany}
+      />
 
       {/* Bulk Category Modal */}
       {bulkCategoryModalOpen && (

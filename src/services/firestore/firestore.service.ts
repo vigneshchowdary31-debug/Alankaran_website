@@ -13,6 +13,7 @@ import {
   limit as limitTo,
   runTransaction as firebaseRunTransaction,
   writeBatch as firebaseWriteBatch,
+  deleteField,
   type QueryConstraint,
   type WhereFilterOp,
   type OrderByDirection,
@@ -143,6 +144,28 @@ export interface IFirestoreService {
   delete(path: FirestoreDocumentPath): Promise<boolean>;
 
   /**
+   * Delete many documents using chunked `writeBatch` commits.
+   *
+   * Firestore caps a batch at 500 operations, so this chunks automatically. Each chunk is atomic;
+   * chunks are not atomic with respect to each other, so a failure part-way through leaves earlier
+   * chunks committed. The result reports exactly which ids succeeded so callers can surface a
+   * partial-success summary rather than an all-or-nothing lie.
+   */
+  deleteMany(
+    collectionName: FirestoreCollectionName,
+    docIds: string[]
+  ): Promise<{ succeeded: string[]; failed: { docId: string; error: string }[] }>;
+
+  /**
+   * Remove specific (optionally nested, dot-separated) fields from a document.
+   *
+   * `save` uses `setDoc(..., { merge: true })`, which merges maps key-by-key and therefore CANNOT
+   * remove a key — writing a smaller map leaves the old entries in place. Deleting a slot requires
+   * an explicit `deleteField()` sentinel, which is what this provides.
+   */
+  removeFields(path: FirestoreDocumentPath, fieldPaths: string[]): Promise<boolean>;
+
+  /**
    * Retrieve every document in a collection, optionally filtered, ordered, and capped.
    */
   list<T extends Record<string, any>>(
@@ -240,6 +263,60 @@ export const firestoreService: IFirestoreService = {
       return true;
     } catch (error: any) {
       throw toOperationError("delete", path, error);
+    }
+  },
+
+  async deleteMany(
+    collectionName: FirestoreCollectionName,
+    docIds: string[]
+  ): Promise<{ succeeded: string[]; failed: { docId: string; error: string }[] }> {
+    assertValidCollectionName(collectionName);
+
+    const succeeded: string[] = [];
+    const failed: { docId: string; error: string }[] = [];
+    const unique = Array.from(new Set(docIds.filter(Boolean)));
+    if (!unique.length) return { succeeded, failed };
+
+    const CHUNK = 400; // under Firestore's 500-op ceiling, leaving headroom
+    for (let i = 0; i < unique.length; i += CHUNK) {
+      const chunk = unique.slice(i, i + CHUNK);
+      traceAttempt("batch", collectionName, { deleteCount: chunk.length });
+      try {
+        if (typeof window !== "undefined" && !navigator.onLine) {
+          throw new Error("offline");
+        }
+        const batch = firebaseWriteBatch(db);
+        for (const docId of chunk) {
+          batch.delete(doc(db, collectionName, docId));
+        }
+        await batch.commit();
+        traceSuccess("batch", collectionName);
+        succeeded.push(...chunk);
+      } catch (error: any) {
+        // Report the whole chunk as failed — a batch commit is atomic, so none of it landed.
+        const wrapped = toOperationError("batch", collectionName, error);
+        for (const docId of chunk) failed.push({ docId, error: wrapped.message });
+      }
+    }
+
+    return { succeeded, failed };
+  },
+
+  async removeFields(path: FirestoreDocumentPath, fieldPaths: string[]): Promise<boolean> {
+    const documentRef = toDocumentRef(path);
+    if (!fieldPaths.length) return true;
+
+    const payload = Object.fromEntries(fieldPaths.map((field) => [field, deleteField()]));
+    traceAttempt("update", path, { removeFields: fieldPaths });
+    try {
+      if (typeof window !== "undefined" && !navigator.onLine) {
+        throw new Error("offline");
+      }
+      await updateDoc(documentRef, payload);
+      traceSuccess("update", path);
+      return true;
+    } catch (error: any) {
+      throw toOperationError("update", path, error);
     }
   },
 

@@ -1,4 +1,5 @@
 import type { CMSSlotMetadata, ImageUsageReference } from "../types";
+import { getSlotDefinition, getSectionDefinition } from "../constants";
 
 /**
  * Phase 3.5 Enterprise Image Usage Tracking Service (`Task 9`).
@@ -6,16 +7,19 @@ import type { CMSSlotMetadata, ImageUsageReference } from "../types";
  * Prevents orphaned deletions and provides immediate pre-deletion warning diagnostics.
  */
 
-const DISPLAY_NAME_MAP: Record<string, string> = {
-  hero_main: "Hero Section — Primary Background Banner",
-  hero_secondary: "Hero Section — Secondary Mobile Overlay",
-  about_portrait: "About Section — Royal Couple Arch Portrait",
-  about_collage_1: "About Section — Heritage Detail 1",
-  about_collage_2: "About Section — Heritage Detail 2",
-  service_mandap: "Services Section — Royal Mandap Architectural Cover",
-  service_decor: "Services Section — Bespoke Decor Detail",
-  service_floral: "Services Section — Artisanal Floral Arrangement",
-};
+/**
+ * Human label for a slot, derived from `SLOT_CATALOG` rather than a hand-maintained map.
+ *
+ * This was previously a hardcoded `DISPLAY_NAME_MAP` covering only 8 of the 21 named slots, and it
+ * had drifted: it still described slot names that no longer existed, and mislabelled `hero_secondary`
+ * as a "Secondary Mobile Overlay" when it is hero slide 2's full background. Reading the catalog
+ * means a slot can never be renamed or added without its label following automatically.
+ */
+function displayNameFor(sectionKey: string, slotName: string): string {
+  const def = getSlotDefinition(sectionKey, slotName);
+  if (def) return `${getSectionDefinition(sectionKey)?.title || sectionKey} — ${def.label}`;
+  return `${sectionKey.toUpperCase()} (${slotName})`;
+}
 
 class ImageUsageService {
   /**
@@ -36,7 +40,7 @@ class ImageUsageService {
             slotId: slot.id || `${sectionKey}_${slotName}`,
             sectionKey,
             slotName,
-            displayName: DISPLAY_NAME_MAP[slotName] || `${sectionKey.toUpperCase()} (${slotName})`,
+            displayName: displayNameFor(sectionKey, slotName),
             url: slot.url,
             cloudinaryId: slot.cloudinaryId,
           });
