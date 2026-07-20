@@ -1,9 +1,6 @@
-import { firestoreService } from "@/services/firestore";
+import { firestoreService, FirestorePaths } from "@/services/firestore";
 import type { CMSSystemConfig } from "../types";
 import { CACHE_CONFIG } from "../constants";
-
-const CONFIG_COLLECTION = "cms/config";
-const SYSTEM_DOC_ID = "system";
 
 /**
  * Default System Configuration values used when Firestore doc has not been initialized (`Task 14`).
@@ -26,7 +23,7 @@ export const DEFAULT_SYSTEM_CONFIG: CMSSystemConfig = {
 
 /**
  * Phase 4 CMS System Configuration Service (`Task 14`).
- * Centralizes all CMS runtime parameters inside `cms/config/system` in Firestore.
+ * Centralizes all CMS runtime parameters inside `cmsSettings/system` in Firestore.
  */
 class SystemConfigService {
   private cachedConfig: CMSSystemConfig | null = null;
@@ -39,7 +36,7 @@ class SystemConfigService {
     }
 
     try {
-      const doc = await firestoreService.get<CMSSystemConfig>(CONFIG_COLLECTION, SYSTEM_DOC_ID);
+      const doc = await firestoreService.get<CMSSystemConfig>(FirestorePaths.settings());
       if (doc) {
         this.cachedConfig = doc;
         this.lastFetchTime = now;
@@ -67,7 +64,7 @@ class SystemConfigService {
       updatedBy: userEmail || "admin@alankaran.com",
     };
 
-    await firestoreService.save(CONFIG_COLLECTION, SYSTEM_DOC_ID, updated);
+    await firestoreService.save(FirestorePaths.settings(), updated);
     this.cachedConfig = updated;
     this.lastFetchTime = Date.now();
     return updated;

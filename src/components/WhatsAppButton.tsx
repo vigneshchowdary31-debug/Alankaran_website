@@ -2,12 +2,14 @@ import { m, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { X, Calendar } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
-
-const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=918977611886&text=Hi%21+Can+you+provide+me+with+more+information+on+your+event+planning+services%3F&type=phone_number&app_absent=0";
+import { useContactInfo } from "@/providers/SiteContentProvider";
+import { buildWhatsAppUrl } from "@/domains/cms/constants";
 
 export default function WhatsAppButton() {
   const [showTooltip, setShowTooltip] = useState(false);
   const { openBookingModal } = useBooking();
+  // Phase A Task 8: the WhatsApp link is derived from the CMS contact record, not a hardcoded URL.
+  const WHATSAPP_URL = buildWhatsAppUrl(useContactInfo());
 
   const openWhatsApp = () => {
     window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");

@@ -12,31 +12,36 @@ import { MESSAGES } from "@/constants/messages";
  * Maps raw Firebase Authentication error codes to clean, human-friendly messages for non-technical users.
  */
 export function getFriendlyErrorMessage(error: any): string {
-  if (!error || !error.code) {
-    return error?.message || MESSAGES.ERROR.UNKNOWN;
+  if (!error) {
+    return MESSAGES.ERROR.UNKNOWN;
   }
 
-  switch (error.code) {
-    case "auth/invalid-credential":
-    case "auth/user-not-found":
-    case "auth/wrong-password":
-      return MESSAGES.ERROR.INVALID_CREDENTIALS;
-    case "auth/invalid-email":
-      return "The email address format is invalid. Please enter a valid email address.";
-    case "auth/user-disabled":
-      return "This administrator account has been disabled. Please contact system support.";
-    case "auth/too-many-requests":
-      return "Too many failed login attempts. For security reasons, please wait a few minutes before trying again.";
-    case "auth/network-request-failed":
-      return MESSAGES.ERROR.NETWORK;
-    case "auth/api-key-not-valid":
-      return "System configuration error: Firebase API key is missing or invalid.";
-    default:
-      if (import.meta.env.DEV) {
-        console.error("[AuthService] Unhandled Firebase error:", error);
-      }
-      return "Authentication failed due to a system error (" + error.code + "). Please try again later.";
+  const code = String(error.code || "");
+  const message = String(error.message || "");
+
+  if (code.includes("api-key-not-valid") || message.includes("api-key-not-valid")) {
+    return "System configuration error (`auth/api-key-not-valid`): Firebase API key is missing or invalid. Please populate `.env.local` with your valid Firebase API credentials and restart the development server (`npm run dev`).";
   }
+  if (code.includes("invalid-credential") || code.includes("user-not-found") || code.includes("wrong-password")) {
+    return MESSAGES.ERROR.INVALID_CREDENTIALS;
+  }
+  if (code.includes("invalid-email")) {
+    return "The email address format is invalid. Please enter a valid email address.";
+  }
+  if (code.includes("user-disabled")) {
+    return "This administrator account has been disabled. Please contact system support.";
+  }
+  if (code.includes("too-many-requests")) {
+    return "Too many failed login attempts. For security reasons, please wait a few minutes before trying again.";
+  }
+  if (code.includes("network-request-failed") || message.includes("network-request-failed")) {
+    return MESSAGES.ERROR.NETWORK;
+  }
+
+  if (import.meta.env.DEV) {
+    console.error("[AuthService] Unhandled Firebase error:", error);
+  }
+  return `Authentication failed due to a system error (${code || message}). Please try again later.`;
 }
 
 export interface IAuthService {

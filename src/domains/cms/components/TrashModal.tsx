@@ -13,7 +13,7 @@ export interface TrashModalProps {
 
 /**
  * Phase 3.5 Enterprise Soft Delete & Trash Modal (`Task 3`).
- * Guarantees zero accidental data loss by preserving deleted assets in `cms/trash` with restore options.
+ * Guarantees zero accidental data loss by preserving deleted assets in `cmsTrash` with restore options.
  */
 export function TrashModal({ isOpen, onClose, items, onRestore, onPermanentDelete }: TrashModalProps) {
   const [busyId, setBusyId] = useState<string | null>(null);

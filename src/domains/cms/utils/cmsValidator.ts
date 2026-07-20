@@ -1,4 +1,4 @@
-import type { CMSSlotMetadata, CMSSectionContent } from "../types";
+import type { CMSSlotMetadata, CMSSectionContent, CMSSectionWithPublishing } from "../types";
 
 /**
  * Validates a CMSSlotMetadata object before persistence to Firestore (`Task 14`).
@@ -33,7 +33,7 @@ export function validateCMSSlotMetadata(metadata: Partial<CMSSlotMetadata>): { v
 /**
  * Validates and sanitizes a raw section document retrieved from Firestore.
  */
-export function sanitizeCMSSectionContent(raw: any, fallbackKey: string): CMSSectionContent {
+export function sanitizeCMSSectionContent(raw: any, fallbackKey: string): CMSSectionWithPublishing {
   if (!raw || typeof raw !== "object") {
     return {
       sectionKey: fallbackKey,
@@ -43,20 +43,32 @@ export function sanitizeCMSSectionContent(raw: any, fallbackKey: string): CMSSec
     };
   }
 
-  const cleanSlots: Record<string, CMSSlotMetadata> = {};
-  if (raw.slots && typeof raw.slots === "object") {
-    for (const [key, val] of Object.entries(raw.slots)) {
+  const cleanSlotMap = (value: any): Record<string, CMSSlotMetadata> | undefined => {
+    if (!value || typeof value !== "object") return undefined;
+    const clean: Record<string, CMSSlotMetadata> = {};
+    for (const [key, val] of Object.entries(value)) {
       if (val && typeof val === "object" && (val as any).url && (val as any).cloudinaryId) {
-        cleanSlots[key] = val as CMSSlotMetadata;
+        clean[key] = val as CMSSlotMetadata;
       }
     }
-  }
+    return clean;
+  };
+
+  // Publishing state must survive sanitization: the public site reads `publishedSlots`, so dropping
+  // it here would make every consumer of `loadSection` see drafts as if they were live.
+  const draftSlots = cleanSlotMap(raw.draftSlots);
+  const publishedSlots = cleanSlotMap(raw.publishedSlots);
 
   return {
     sectionKey: raw.sectionKey || fallbackKey,
     title: raw.title || `${fallbackKey.toUpperCase()} Section`,
     description: raw.description || "",
-    slots: cleanSlots,
+    slots: cleanSlotMap(raw.slots) || {},
+    ...(draftSlots ? { draftSlots } : {}),
+    ...(publishedSlots ? { publishedSlots } : {}),
+    ...(typeof raw.publishedAt === "number" ? { publishedAt: raw.publishedAt } : {}),
+    ...(raw.publishedBy ? { publishedBy: raw.publishedBy } : {}),
+    ...(raw.publishedVersionId ? { publishedVersionId: raw.publishedVersionId } : {}),
     updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : Date.now(),
     updatedBy: raw.updatedBy || "system@alankaran.com",
   };

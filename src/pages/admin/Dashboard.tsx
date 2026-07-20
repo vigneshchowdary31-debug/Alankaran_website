@@ -130,34 +130,34 @@ export function AdminDashboard() {
       href: ROUTES.ADMIN.IMAGES,
     },
     {
-      phase: "Phase 3",
-      title: "Firestore Data Layer",
-      description: "NoSQL JSON schema management in Firestore (`cms/siteContent`), storing exact URLs, alt tags, and section keys.",
+      phase: "Phase 3 & 3.5",
+      title: "Firestore Data Layer & Diagnostics",
+      description: "NoSQL JSON schema management in Firestore, version history, soft delete, optimistic UI, cache layer, and diagnostics dashboard.",
       icon: Database,
       status: "Completed",
-      href: ROUTES.ADMIN.IMAGES,
+      href: ROUTES.ADMIN.DEBUG,
     },
     {
       phase: "Phase 4",
       title: "Live Website Integration",
-      description: "Connect frontend components via `SiteContentProvider` with 0ms local caching and instant live updates.",
+      description: "Public website connected to CMS via SiteContentProvider with 0ms local caching and real-time Firestore updates.",
       icon: Globe,
-      status: "Up Next",
+      status: "Completed",
     },
     {
-      phase: "Phase 5",
-      title: "Gallery Management",
-      description: "Interactive portfolio grid with drag & drop reordering, categorizations, and bulk multi-file uploads.",
+      phase: "Phase 5 & 6",
+      title: "Gallery Management Studio",
+      description: "Grid/List views, bulk upload, drag-and-drop reordering, metadata editing, device simulation preview, and trash management.",
       icon: Images,
-      status: "Locked",
+      status: "Completed",
       href: ROUTES.ADMIN.GALLERY,
     },
     {
-      phase: "Phase 6",
-      title: "Production Polish & Backup",
-      description: "Audit trail activity logging, automated JSON backup rollback, accessibility polish, and error monitoring.",
+      phase: "Phase 7",
+      title: "Production Polish & UX",
+      description: "Activity Log with real-time audit trail, Undo system, skeleton loaders, toast notifications, mobile responsiveness, and accessibility.",
       icon: History,
-      status: "Locked",
+      status: "Completed",
       href: ROUTES.ADMIN.ACTIVITY,
     },
   ];
@@ -168,9 +168,9 @@ export function AdminDashboard() {
 
       {/* Page Header */}
       <PageHeader
-        badge="Phase 3 Active"
+        badge="Phase 7 Active — Production Ready"
         title={`Welcome to ${APP_CONFIG.CMS_TITLE}`}
-        description="Your custom, zero-deployment image management dashboard designed specifically for non-technical administrators."
+        description="Your enterprise-grade custom image CMS. All 7 phases complete: Authentication, Cloudinary CDN, Firestore Data Layer, Live Integration, Gallery Management Studio, and Production Polish."
       />
 
       {/* Phase 3 Status & Offline Banner */}
@@ -227,13 +227,13 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Architecture & Instructions Card */}
+      {/* Architecture Notice — Updated to reflect Phase 7 completion */}
       <Card className="bg-black/25 border-gold/15 p-6 rounded-2xl">
         <CardTitle className="font-serif text-lg text-stone-200 mb-2 font-normal flex items-center gap-2">
-          <ShieldCheck className="size-4 text-gold" /> Architecture Notice: Phase 2 Storage Layer Active
+          <ShieldCheck className="size-4 text-gold" /> System Status: All 7 Phases Complete
         </CardTitle>
         <CardDescription className="text-xs font-sans text-stone-400 leading-relaxed">
-          You are currently running <strong className="text-gold">Phase 2 (Storage Layer & Cloudinary Integration)</strong> of the Custom Image CMS roadmap. All authentication guards, modular storage interfaces (<code className="font-mono text-emerald-400">storageProvider</code>), client-side optimization engines, and CDN upload cards (`/admin/images`) are fully functional. Per strict instructions, <strong className="text-stone-300">Phase 3 (Firestore CRUD) and Phase 4 (Live Public Website Integration) have NOT been initialized yet</strong>.
+          The Alankaran CMS is <strong className="text-emerald-400">production-ready</strong>. Phases 1–7 are fully functional: Firebase Authentication, Cloudinary CDN Storage, Firestore Data Layer, Live Website Integration, Gallery Management Studio, and Phase 7 Production Polish (Activity Log, Undo System, Loading States, Toast Notifications, Mobile Responsiveness, Accessibility).
         </CardDescription>
       </Card>
     </div>

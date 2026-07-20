@@ -1,4 +1,4 @@
-import { firestoreService } from "@/services/firestore";
+import { firestoreService, FirestorePaths } from "@/services/firestore";
 import type {
   CMSSlotMetadata,
   CMSSectionContent,
@@ -7,7 +7,7 @@ import type {
   CMSTrashRecord,
   SectionKey,
 } from "../types";
-import { CMS_COLLECTIONS, CMS_COLLECTION_PATH, createEmptySection } from "../constants";
+import { createEmptySection } from "../constants";
 import { validateCMSSlotMetadata, sanitizeCMSSectionContent } from "../utils";
 import { cmsCacheService } from "./cmsCache.service";
 import { auditLogService } from "./auditLog.service";
@@ -65,7 +65,7 @@ export const cmsService: ICMSService = {
       updatedBy: metadata.updatedBy || "admin@alankaran.com",
     };
 
-    await firestoreService.save(CMS_COLLECTION_PATH, sectionKey, payload);
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), payload);
 
     // Record audit log (`Task 10`)
     auditLogService.log(
@@ -102,7 +102,7 @@ export const cmsService: ICMSService = {
       return cached;
     }
 
-    const raw = await firestoreService.get<any>(CMS_COLLECTION_PATH, sectionKey);
+    const raw = await firestoreService.get<any>(FirestorePaths.siteContent(sectionKey));
     if (!raw) return null;
     const sanitized = sanitizeCMSSectionContent(raw, sectionKey);
     cmsCacheService.set(sectionKey, sanitized);
@@ -129,7 +129,7 @@ export const cmsService: ICMSService = {
     sectionKey: SectionKey | string,
     callback: (section: CMSSectionContent | null, error?: Error) => void
   ): () => void {
-    return firestoreService.subscribe<any>(CMS_COLLECTION_PATH, sectionKey, (data, error) => {
+    return firestoreService.subscribe<any>(FirestorePaths.siteContent(sectionKey), (data, error) => {
       if (error) {
         callback(null, error);
       } else if (!data) {
@@ -177,8 +177,8 @@ export const cmsService: ICMSService = {
     };
 
     // Execute via atomic batch or transaction (`Task 4`)
-    await firestoreService.save(CMS_COLLECTIONS.VERSIONS, `${sectionKey}_${versionId}`, snapshotPayload);
-    await firestoreService.save(CMS_COLLECTION_PATH, sectionKey, sectionPayload);
+    await firestoreService.save(FirestorePaths.version(sectionKey, versionId), snapshotPayload);
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), sectionPayload);
 
     cmsCacheService.invalidate(sectionKey);
     auditLogService.log("Publish", userEmail || "admin@alankaran.com", sectionKey, `Published ${Object.keys(section.slots).length} slots to live version ${versionId}`);
@@ -188,7 +188,7 @@ export const cmsService: ICMSService = {
   },
 
   async restoreVersion(sectionKey: SectionKey | string, versionId: string, userEmail: string): Promise<CMSSectionWithPublishing> {
-    const snapshot = await firestoreService.get<CMSVersionSnapshot>(CMS_COLLECTIONS.VERSIONS, `${sectionKey}_${versionId}`);
+    const snapshot = await firestoreService.get<CMSVersionSnapshot>(FirestorePaths.version(sectionKey, versionId));
     if (!snapshot || !snapshot.metadata?.slots) {
       throw new Error(`Version snapshot ${versionId} not found or corrupted.`);
     }
@@ -202,7 +202,7 @@ export const cmsService: ICMSService = {
       updatedBy: userEmail || "admin@alankaran.com",
     };
 
-    await firestoreService.save(CMS_COLLECTION_PATH, sectionKey, restorePayload);
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), restorePayload);
     cmsCacheService.invalidate(sectionKey);
     auditLogService.log("Restore", userEmail || "admin@alankaran.com", `${sectionKey}/history/${versionId}`, `Restored working draft to previous version ${versionId}`);
 
@@ -232,13 +232,13 @@ export const cmsService: ICMSService = {
       asset,
     };
 
-    await firestoreService.save(CMS_COLLECTIONS.TRASH, trashId, trashRecord);
+    await firestoreService.save(FirestorePaths.trash(trashId), trashRecord);
 
     // Remove slot from active working draft (`Task 3 & 4`)
     const updatedSlots = { ...section.slots };
     delete updatedSlots[slotName];
 
-    await firestoreService.save(CMS_COLLECTION_PATH, sectionKey, {
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), {
       slots: updatedSlots,
       draftSlots: updatedSlots,
       updatedAt: now,
@@ -251,7 +251,7 @@ export const cmsService: ICMSService = {
   },
 
   async restoreFromTrash(trashId: string, userEmail: string): Promise<boolean> {
-    const record = await firestoreService.get<CMSTrashRecord>(CMS_COLLECTIONS.TRASH, trashId);
+    const record = await firestoreService.get<CMSTrashRecord>(FirestorePaths.trash(trashId));
     if (!record || !record.asset) {
       throw new Error(`Trash record ${trashId} not found.`);
     }
@@ -260,34 +260,54 @@ export const cmsService: ICMSService = {
     const section = (await this.loadSection(sectionKey)) || createEmptySection(sectionKey);
     const updatedSlots = { ...section.slots, [slotName]: record.asset };
 
-    await firestoreService.save(CMS_COLLECTION_PATH, sectionKey, {
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), {
       slots: updatedSlots,
       draftSlots: updatedSlots,
       updatedAt: Date.now(),
       updatedBy: userEmail || "admin@alankaran.com",
     });
 
-    await firestoreService.delete(CMS_COLLECTIONS.TRASH, trashId);
+    await firestoreService.delete(FirestorePaths.trash(trashId));
     cmsCacheService.invalidate(sectionKey);
     auditLogService.log("Restore", userEmail || "admin@alankaran.com", `${sectionKey}/${slotName}`, `Restored asset from trash (${trashId})`);
     return true;
   },
 
   async permanentDeleteTrash(trashId: string, userEmail: string): Promise<boolean> {
-    const success = await firestoreService.delete(CMS_COLLECTIONS.TRASH, trashId);
+    const success = await firestoreService.delete(FirestorePaths.trash(trashId));
     if (success) {
-      auditLogService.log("Delete", userEmail || "admin@alankaran.com", `cms/trash/${trashId}`, `Permanently purged trash record ${trashId}`);
+      auditLogService.log("Delete", userEmail || "admin@alankaran.com", `${FirestorePaths.trash(trashId).collection}/${trashId}`, `Permanently purged trash record ${trashId}`);
     }
     return success;
   },
 
   async getTrashItems(): Promise<CMSTrashRecord[]> {
-    // Return sample or retrieved list
-    return [];
+    try {
+      return await firestoreService.list<CMSTrashRecord>(FirestorePaths.trashCollection(), {
+        orderBy: { field: "deletedAt", direction: "desc" },
+      });
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[CMSService] Failed to load trash records:", err);
+      }
+      return [];
+    }
   },
 
   async getVersionHistory(sectionKey: SectionKey | string): Promise<CMSVersionSnapshot[]> {
-    return [];
+    try {
+      const snapshots = await firestoreService.list<CMSVersionSnapshot>(FirestorePaths.versionsCollection(), {
+        where: { field: "section", op: "==", value: String(sectionKey) },
+      });
+      // Sorted client-side: pairing this equality filter with an orderBy would require a composite
+      // index, and a section holds at most `maxVersions` (50) snapshots.
+      return snapshots.sort((a, b) => b.timestamp - a.timestamp);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("[CMSService] Failed to load version history:", err);
+      }
+      return [];
+    }
   },
 };
 

@@ -2,16 +2,23 @@
  * Section keys supported in the Alankaran Custom Image CMS.
  * Future sections (`destinations`, `testimonials`) require no structural or database changes.
  */
-export type SectionKey = "hero" | "about" | "services" | "gallery" | "settings";
+export type SectionKey =
+  | "hero"
+  | "about"
+  | "services"
+  | "gallery"
+  | "testimonials"
+  | "contact"
+  | "settings";
 
 /**
- * Slot metadata record stored inside Firestore under `cms/siteContent/{sectionKey}`.
+ * Slot metadata record stored inside Firestore under `cmsSiteContent/{sectionKey}`.
  * Exposes full asset characteristics without relying solely on raw CDN URLs.
  */
 export interface CMSSlotMetadata {
   id: string; // Domain unique slot ID (e.g. "hero_hero_main_1721200000000")
   sectionKey: SectionKey | string;
-  slotName: string; // e.g. "hero_main", "about_portrait", "service_mandap"
+  slotName: string; // e.g. "hero_main", "about_portrait", "service_mandap", "gallery_grid_1"
   cloudinaryId: string; // Cloudinary public_id
   url: string; // Cloudinary secure_url (HTTPS)
   altText: string;
@@ -23,10 +30,18 @@ export interface CMSSlotMetadata {
   createdAt?: number;
   updatedAt: number;
   updatedBy: string; // Admin user email (`currentUser.email`)
+  // Phase 6 Gallery Management Optional Fields (`Task 3 & 6`)
+  caption?: string;
+  tags?: string[];
+  category?: string;
+  order?: number;
+  visibility?: boolean; // true = visible, false = hidden
+  isDeleted?: boolean;
+  deletedAt?: number;
 }
 
 /**
- * Complete document structure stored inside `cms/siteContent/{sectionKey}`.
+ * Complete document structure stored inside `cmsSiteContent/{sectionKey}`.
  * A section document contains its title, description, and a map of `slots` keyed by `slotName`.
  */
 export interface CMSSectionContent {
@@ -39,7 +54,7 @@ export interface CMSSectionContent {
 }
 
 /**
- * System configuration settings stored inside `cms/siteContent/settings`.
+ * System configuration settings stored inside `cmsSettings/system`.
  */
 export interface CMSSettings {
   cmsTitle: string;
@@ -69,7 +84,7 @@ export interface CMSSectionWithPublishing extends CMSSectionContent {
 
 /**
  * Phase 3.5 Version History Snapshot (`Task 2`).
- * Stored inside `cms/versions/{versionId}` or subcollections on every Publish action.
+ * Stored inside `cmsVersions/{sectionKey}_{versionId}` on every Publish action.
  */
 export interface CMSVersionSnapshot {
   versionId: string;
@@ -84,7 +99,7 @@ export interface CMSVersionSnapshot {
 
 /**
  * Phase 3.5 Soft Delete Trash Record (`Task 3`).
- * Stored inside `cms/trash/{trashId}` when an image slot or record is deleted.
+ * Stored inside `cmsTrash/{trashId}` when an image slot or record is deleted.
  */
 export interface CMSTrashRecord {
   trashId: string;
@@ -99,16 +114,16 @@ export interface CMSTrashRecord {
 
 /**
  * Phase 3.5 Audit Log Action Types and Entry Model (`Task 10`).
- * Stored inside `cms/auditLogs/{logId}`. Exclusively accessible by administrators.
+ * Stored inside `cmsAuditLogs/{logId}`. Exclusively accessible by administrators.
  */
-export type AuditActionType = "Upload" | "Replace" | "Delete" | "Publish" | "Restore" | "Login" | "Logout" | "Cache_Clear";
+export type AuditActionType = "Upload" | "Replace" | "Delete" | "Publish" | "Restore" | "Login" | "Logout" | "Cache_Clear" | "Inquiry";
 
 export interface CMSAuditLogEntry {
   id: string;
   action: AuditActionType;
   user: string;
   timestamp: number;
-  target: string; // e.g. "hero/hero_main" or "cms/settings"
+  target: string; // e.g. "hero/hero_main" or "cmsSettings/system"
   details: string;
 }
 
@@ -152,7 +167,7 @@ export interface ImageUsageReference {
 
 /**
  * Phase 4 CMS System Configuration Schema (`Task 14`).
- * Stored under `cms/config/system` in Firestore.
+ * Stored under `cmsSettings/system` in Firestore.
  */
 export interface CMSSystemConfig {
   cacheTTL: number; // in milliseconds
@@ -230,3 +245,54 @@ export interface CMSAnalyticsEvent {
 }
 
 
+/**
+ * Phase A Task 7 — Public website inquiry submissions.
+ * Stored inside `cmsInquiries/{inquiryId}`. Created by anonymous visitors; readable by admins only.
+ */
+export type InquiryStatus = "new" | "contacted" | "archived";
+
+/** Which form/page produced the inquiry — used to route follow-up. */
+export type InquirySourcePage = "contact" | "booking" | "consultation" | "destinations";
+
+export interface CMSInquiry {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  eventType: string;
+  message: string;
+  createdAt: number;
+  status: InquiryStatus;
+  sourcePage: InquirySourcePage;
+  // Optional fields — populated by whichever form collected them.
+  eventDate?: string;
+  guestCount?: string;
+  location?: string;
+  budget?: string;
+  company?: string;
+  referralSource?: string;
+}
+
+/** The caller-supplied portion of an inquiry; `id`, `createdAt`, and `status` are assigned on write. */
+export type CMSInquiryInput = Omit<CMSInquiry, "id" | "createdAt" | "status">;
+
+/**
+ * Phase A Task 8 — Site-wide contact details.
+ * Stored inside `cmsSiteContent/contact` alongside that section's image slots, so Contact, Footer,
+ * and the WhatsApp button all read one record instead of duplicating literals.
+ */
+export interface CMSContactInfo {
+  phones: string[];
+  emails: string[];
+  addressLine: string;
+  addressShort: string;
+  mapQuery: string;
+  whatsappNumber: string;
+  whatsappMessage: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  businessHours: string;
+  studios: string[];
+  updatedAt?: number;
+  updatedBy?: string;
+}

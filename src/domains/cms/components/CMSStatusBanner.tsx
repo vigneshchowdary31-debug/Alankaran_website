@@ -39,7 +39,7 @@ export function CMSStatusBanner() {
           <WifiOff className="size-4 text-red-400" />
           <AlertTitle className="font-serif font-medium">No Internet Connection Detected</AlertTitle>
           <AlertDescription className="text-xs font-sans text-red-300">
-            You are currently working offline (`Task 12`). Cloudinary CDN uploads and Firestore real-time synchronization (`cms/siteContent`) are suspended until network connectivity is restored.
+            You are currently working offline (`Task 12`). Cloudinary CDN uploads and Firestore real-time synchronization (`cmsSiteContent`) are suspended until network connectivity is restored.
           </AlertDescription>
         </Alert>
       )}
@@ -65,7 +65,7 @@ export function CMSStatusBanner() {
             <h4 className="text-xs font-serif font-medium text-stone-200 flex items-center gap-1.5">
               <span>Phase 3 Firestore Data Layer Active</span>
               <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-gold/10 text-gold border border-gold/20">
-                cms/siteContent
+                cmsSiteContent
               </span>
             </h4>
             <p className="text-[11px] font-sans text-stone-400">

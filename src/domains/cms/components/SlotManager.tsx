@@ -72,7 +72,14 @@ export function SlotManager({
 
     const success = await saveSlot(slotName, metadata);
     if (success) {
-      showSuccess("CMS Database Updated", `Saved image metadata to Firestore [cms/siteContent/${sectionKey}]`);
+      showSuccess("CMS Database Updated", `Saved image metadata to Firestore [cmsSiteContent/${sectionKey}]`);
+    } else {
+      // The Cloudinary upload already reported success, so a silent Firestore failure here reads as
+      // "the upload worked" while nothing was persisted. Always surface it.
+      showError(
+        "Firestore Save Failed",
+        `Image reached Cloudinary but its metadata was NOT written to cmsSiteContent/${sectionKey}. See the console for the document path, UID, and error code.`
+      );
     }
   };
 

@@ -44,7 +44,7 @@ const testimonials = [
 
 export default function Testimonials() {
   const { getSlotImage } = useSiteContent();
-  const heroBg = getSlotImage("about", "about_floral_detail", "/images/floral_detail.webp").url;
+  const heroBg = getSlotImage("testimonials", "testimonials_hero", "/images/floral_detail.webp", "Alankaran Client Testimonials").url;
 
   return (
     <div className="bg-background text-foreground">

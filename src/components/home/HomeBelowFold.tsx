@@ -58,24 +58,29 @@ function WeddingImage({ image, aspectClass = "aspect-[4/5]", label = "" }: { ima
 }
 
 export default function HomeBelowFold({ pulseHighlight }: { pulseHighlight: boolean }) {
-  const { getSlotImage } = useSiteContent();
+  const { getSlotImage, getGalleryImages } = useSiteContent();
+
+  // Phase A Task 1: the home page showcases the CMS gallery collection in published order. Each
+  // position falls back to its bundled asset until the admin has uploaded that many gallery images.
+  const gallery = getGalleryImages();
+  const pick = (index: number, fallbackUrl: string) => gallery[index]?.url || fallbackUrl;
 
   const images = [
-    getSlotImage("gallery", "gallery_grid_1", "/images/royal_mandap.webp", "Royal Mandap").url,
-    getSlotImage("gallery", "gallery_grid_2", "/images/coastal_wedding.webp", "Coastal Wedding").url,
-    getSlotImage("gallery", "gallery_grid_3", "/images/mughal_garden.webp", "Mughal Garden").url,
-    getSlotImage("gallery", "gallery_grid_4", "/images/floral_stage.webp", "Floral Stage").url,
-    getSlotImage("gallery", "gallery_grid_5", "/images/bridal_entry.webp", "Bridal Entry").url,
-    getSlotImage("gallery", "gallery_grid_6", "/images/engagement_decor.webp", "Engagement Decor").url,
-    getSlotImage("gallery", "gallery_grid_7", "/images/grand_reception.webp", "Grand Reception").url,
-    getSlotImage("gallery", "gallery_grid_8", "/images/floral_detail.webp", "Floral Detail").url,
+    pick(0, "/images/royal_mandap.webp"),
+    pick(1, "/images/coastal_wedding.webp"),
+    pick(2, "/images/mughal_garden.webp"),
+    pick(3, "/images/floral_stage.webp"),
+    pick(4, "/images/bridal_entry.webp"),
+    pick(5, "/images/engagement_decor.webp"),
+    pick(6, "/images/grand_reception.webp"),
+    pick(7, "/images/floral_detail.webp"),
   ];
 
-  const mandapDetailImage = getSlotImage("gallery", "gallery_grid_4", "/images/mandap_floral_detail.webp").url;
+  const mandapDetailImage = pick(8, "/images/mandap_floral_detail.webp");
   const cinematicImages = [
     getSlotImage("hero", "hero_slide_3", "/images/cinematic_floral_wedding.webp").url,
-    getSlotImage("gallery", "gallery_grid_2", "/images/coastal_sunset_wedding.webp").url,
-    getSlotImage("gallery", "gallery_grid_7", "/images/royal_palace_reception.webp").url,
+    pick(9, "/images/coastal_sunset_wedding.webp"),
+    pick(10, "/images/royal_palace_reception.webp"),
   ];
 
   return (

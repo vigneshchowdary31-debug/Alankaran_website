@@ -1,2 +1,2 @@
 export * from "./SiteContentProvider";
-export { default as SiteContentProvider } from "./SiteContentProvider";
+export { SiteContentProvider, SiteContentProvider as default } from "./SiteContentProvider";

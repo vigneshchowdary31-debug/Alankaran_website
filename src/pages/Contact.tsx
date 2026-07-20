@@ -4,18 +4,33 @@ import { Check } from "lucide-react";
 import Footer from "@/components/Footer";
 import Consultation from "@/components/Consultation";
 import SEO from "@/components/SEO";
+import { useSiteContent, useContactInfo } from "@/providers/SiteContentProvider";
+import { buildWhatsAppUrl, buildMapEmbedUrl } from "@/domains/cms/constants";
+import { inquiryService } from "@/domains/cms/services";
 
 const inputCls = "w-full border border-gold/30 bg-white text-foreground font-sans font-light text-sm px-4 py-3 focus:outline-none focus:border-gold/70 transition-colors placeholder:text-muted-foreground";
 const selectCls = "w-full border border-gold/30 bg-white text-foreground font-sans font-light text-sm px-4 py-3 focus:outline-none focus:border-gold/70 transition-colors";
 const labelCls = "section-label text-gold/80 block mb-1";
 
 export default function Contact() {
+  const { getSlotImage } = useSiteContent();
+  // Phase A Task 8: every phone/email/address/social value below resolves from the CMS.
+  const contact = useContactInfo();
+  const heroImage = getSlotImage(
+    "contact",
+    "contact_hero",
+    "/images/floral_stage.webp",
+    "Contact Alankaran"
+  ).url;
+
   const [form, setForm] = useState({
     name: "", phone: "", email: "", weddingDate: "",
     eventType: "", guestCount: "", location: "", budget: "", message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [toast, setToast] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -30,7 +45,7 @@ export default function Contact() {
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -38,9 +53,34 @@ export default function Contact() {
       return;
     }
     setErrors({});
-    setToast(true);
-    setForm({ name: "", phone: "", email: "", weddingDate: "", eventType: "", guestCount: "", location: "", budget: "", message: "" });
-    setTimeout(() => setToast(false), 4000);
+    setSubmitError(null);
+    setSubmitting(true);
+
+    // Phase A Task 7: the inquiry is persisted to `cmsInquiries` before we claim success. The success
+    // toast used to fire unconditionally while the lead was discarded.
+    try {
+      await inquiryService.submit({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        eventType: form.eventType,
+        message: form.message,
+        eventDate: form.weddingDate,
+        guestCount: form.guestCount,
+        location: form.location,
+        budget: form.budget,
+        sourcePage: "contact",
+      });
+      setToast(true);
+      setForm({ name: "", phone: "", email: "", weddingDate: "", eventType: "", guestCount: "", location: "", budget: "", message: "" });
+      setTimeout(() => setToast(false), 4000);
+    } catch (err: any) {
+      setSubmitError(
+        err?.message || "We couldn't send your inquiry. Please try again, or reach us on WhatsApp."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -78,7 +118,7 @@ export default function Contact() {
 
       {/* Hero */}
       <section className="relative h-[55vh] flex items-end pb-20 overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(/images/floral_stage.webp)`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
         <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.4) 100%)" }} />
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12 z-20">
           <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Get in Touch</m.p>
@@ -177,14 +217,21 @@ export default function Contact() {
                 />
               </div>
 
+              {submitError && (
+                <p className="text-red-500 text-xs font-sans" data-testid="inquiry-error">
+                  {submitError}
+                </p>
+              )}
+
               <m.button
                 type="submit"
-                className="w-full py-4 bg-gold text-background section-label hover:bg-gold/90 hover:gold-glow transition-all flex items-center justify-center"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                disabled={submitting}
+                className="w-full py-4 bg-gold text-background section-label hover:bg-gold/90 hover:gold-glow transition-all flex items-center justify-center disabled:opacity-60"
+                whileHover={{ scale: submitting ? 1 : 1.01 }}
+                whileTap={{ scale: submitting ? 1 : 0.99 }}
                 data-testid="btn-submit-inquiry"
               >
-                Submit
+                {submitting ? "Sending..." : "Submit"}
               </m.button>
             </form>
           </div>
@@ -195,30 +242,31 @@ export default function Contact() {
             <div className="space-y-6">
               <div>
                 <p className="section-label mb-1 text-gold/80">Email</p>
-                <p className="text-body text-sm text-foreground">chaitanya@alankaran.com</p>
-                <p className="text-body text-sm text-foreground">chandrika@alankaran.com</p>
+                {contact.emails.map((email) => (
+                  <p key={email} className="text-body text-sm text-foreground">{email}</p>
+                ))}
                 <div className="h-px mt-4 bg-gold/20" />
               </div>
               <div>
                 <p className="section-label mb-1 text-gold/80">Phone</p>
-                <p className="text-body text-sm text-foreground">+91 89776 11886</p>
-                <p className="text-body text-sm text-foreground">+91 91772 10150</p>
-                <p className="text-body text-sm text-foreground">+91 88854 41188</p>
+                {contact.phones.map((phone) => (
+                  <p key={phone} className="text-body text-sm text-foreground">{phone}</p>
+                ))}
                 <div className="h-px mt-4 bg-gold/20" />
               </div>
               <div>
                 <p className="section-label mb-1 text-gold/80">Address</p>
-                <p className="text-body text-sm text-foreground">Plot no: 78, TNGO's Colony Phase 2, Financial District, Gachibowli, Hyderabad, Telangana 500046</p>
+                <p className="text-body text-sm text-foreground">{contact.addressLine}</p>
                 <div className="h-px mt-4 bg-gold/20" />
               </div>
               <div>
                 <p className="section-label mb-1 text-gold/80">Working Hours</p>
-                <p className="text-body text-sm text-foreground">Monday–Saturday, 10:00 AM – 7:00 PM IST</p>
+                <p className="text-body text-sm text-foreground">{contact.businessHours}</p>
                 <div className="h-px mt-4 bg-gold/20" />
               </div>
 
               <a
-                href="https://api.whatsapp.com/send/?phone=918977611886&text=Hi%21+Can+you+provide+me+with+more+information+on+your+event+planning+services%3F&type=phone_number&app_absent=0"
+                href={buildWhatsAppUrl(contact)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 w-full font-sans text-xs section-label px-4 py-3 bg-green-100 text-green-800 border border-green-300 hover:bg-green-200 transition-colors"
@@ -228,15 +276,15 @@ export default function Contact() {
               </a>
 
               <div className="flex gap-4 pt-2">
-                <a href="https://www.instagram.com/alankaranevents" target="_blank" rel="noopener noreferrer" className="section-label text-xs hover:text-gold transition-colors text-muted-foreground">Instagram</a>
-                <a href="https://www.facebook.com/alankaranevents" target="_blank" rel="noopener noreferrer" className="section-label text-xs hover:text-gold transition-colors text-muted-foreground">Facebook</a>
+                <a href={contact.instagramUrl} target="_blank" rel="noopener noreferrer" className="section-label text-xs hover:text-gold transition-colors text-muted-foreground">Instagram</a>
+                <a href={contact.facebookUrl} target="_blank" rel="noopener noreferrer" className="section-label text-xs hover:text-gold transition-colors text-muted-foreground">Facebook</a>
               </div>
 
               <div className="pt-2">
                 <p className="section-label mb-4">Our Studios</p>
-                <p className="text-body text-sm text-foreground">Hyderabad — Headquarters</p>
-                <p className="text-body text-sm text-foreground">Delhi — Design Studio</p>
-                <p className="text-body text-sm text-foreground">Jaipur — Creative Studio</p>
+                {contact.studios.map((studio) => (
+                  <p key={studio} className="text-body text-sm text-foreground">{studio}</p>
+                ))}
               </div>
             </div>
           </div>
@@ -251,7 +299,7 @@ export default function Contact() {
         <div className="w-full overflow-hidden border border-gold/30" style={{ height: "440px" }} data-testid="map-embed">
           <iframe
             title="Alankaran Hyderabad Headquarters"
-            src="https://maps.google.com/maps?q=Alankaran+Events-+Best+Event+Management+%26+Wedding+Management+Company+in+Hyderabad&output=embed&z=14"
+            src={buildMapEmbedUrl(contact)}
             width="100%"
             height="100%"
             style={{ border: 0, display: "block" }}
@@ -261,7 +309,7 @@ export default function Contact() {
           />
         </div>
         <p className="font-sans text-xs font-light text-muted-foreground mt-3">
-          Plot no: 78, TNGO's Colony Phase 2, Financial District, Gachibowli, Hyderabad, Telangana 500046
+          {contact.addressLine}
         </p>
       </div>
 

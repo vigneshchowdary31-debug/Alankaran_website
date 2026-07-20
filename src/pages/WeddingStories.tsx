@@ -41,17 +41,22 @@ const stories = [
 ];
 
 export default function WeddingStories() {
-  const { getSlotImage } = useSiteContent();
+  const { getGalleryImages } = useSiteContent();
+
+  // Phase A Task 1: story imagery is drawn from the CMS gallery collection in published order,
+  // falling back to bundled assets for positions the admin has not filled yet.
+  const gallery = getGalleryImages();
+  const pick = (index: number, fallbackUrl: string) => gallery[index]?.url || fallbackUrl;
 
   const images = [
-    getSlotImage("gallery", "gallery_grid_1", "/images/royal_mandap.webp", "Royal Mandap Story").url,
-    getSlotImage("gallery", "gallery_grid_2", "/images/coastal_wedding.webp", "Coastal Wedding Story").url,
-    getSlotImage("gallery", "gallery_grid_3", "/images/mughal_garden.webp", "Mughal Garden Story").url,
-    getSlotImage("gallery", "gallery_grid_4", "/images/floral_stage.webp", "Floral Stage Story").url,
-    getSlotImage("gallery", "gallery_grid_5", "/images/bridal_entry.webp", "Bridal Entry Story").url,
-    getSlotImage("gallery", "gallery_grid_6", "/images/engagement_decor.webp", "Engagement Decor Story").url,
-    getSlotImage("gallery", "gallery_grid_7", "/images/grand_reception.webp", "Grand Reception Story").url,
-    getSlotImage("gallery", "gallery_grid_8", "/images/floral_detail.webp", "Floral Detail Story").url,
+    pick(0, "/images/royal_mandap.webp"),
+    pick(1, "/images/coastal_wedding.webp"),
+    pick(2, "/images/mughal_garden.webp"),
+    pick(3, "/images/floral_stage.webp"),
+    pick(4, "/images/bridal_entry.webp"),
+    pick(5, "/images/engagement_decor.webp"),
+    pick(6, "/images/grand_reception.webp"),
+    pick(7, "/images/floral_detail.webp"),
   ];
 
   return (

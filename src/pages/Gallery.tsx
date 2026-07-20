@@ -1,42 +1,51 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { useSiteContent } from "@/providers/SiteContentProvider";
+import { BUNDLED_GALLERY_FALLBACKS, DEFAULT_GALLERY_CATEGORY } from "@/domains/cms/constants";
 
-const categories = ["All", "Mandap", "Floral", "Reception", "Bridal Entry", "Royal Themes", "Stage Decor"];
+interface GalleryTile {
+  id: string;
+  cat: string;
+  image: string;
+  label: string;
+}
 
 export default function Gallery() {
-  const { getSlotImage } = useSiteContent();
+  const { getGalleryImages } = useSiteContent();
 
-  const images = [
-    getSlotImage("gallery", "gallery_grid_1", "/images/royal_mandap.webp", "Royal Mandap, Udaipur").url,
-    getSlotImage("gallery", "gallery_grid_2", "/images/coastal_wedding.webp", "Coastal Wedding, Goa").url,
-    getSlotImage("gallery", "gallery_grid_3", "/images/mughal_garden.webp", "Mughal Garden, Jaisalmer").url,
-    getSlotImage("gallery", "gallery_grid_4", "/images/floral_stage.webp", "Garden Floristry, Jaipur").url,
-    getSlotImage("gallery", "gallery_grid_5", "/images/bridal_entry.webp", "Bridal Entry Tunnel").url,
-    getSlotImage("gallery", "gallery_grid_6", "/images/engagement_decor.webp", "Engagement Stage").url,
-    getSlotImage("gallery", "gallery_grid_7", "/images/grand_reception.webp", "Grand Reception").url,
-    getSlotImage("gallery", "gallery_grid_8", "/images/floral_detail.webp", "Rose Canopy").url,
-  ];
+  // Phase A Task 1: the grid renders the CMS gallery collection ordered by `order` — exactly the data
+  // the Gallery Manager writes. Fixed `gallery_grid_N` slot names are gone. The bundled set renders
+  // only while the CMS gallery is empty.
+  const cmsImages = getGalleryImages();
 
-  const galleryItems = [
-    { id: 1, cat: "Mandap", image: images[0], label: "Royal Mandap, Udaipur" },
-    { id: 2, cat: "Floral", image: images[3], label: "Garden Floristry, Jaipur" },
-    { id: 3, cat: "Reception", image: images[6], label: "Grand Reception, Mumbai" },
-    { id: 4, cat: "Bridal Entry", image: images[4], label: "Floral Tunnel, Goa" },
-    { id: 5, cat: "Royal Themes", image: images[2], label: "Rajputana Theme, Jodhpur" },
-    { id: 6, cat: "Stage Decor", image: images[5], label: "Baroque Stage, Delhi" },
-    { id: 7, cat: "Mandap", image: images[0], label: "Mughal Mandap, Agra" },
-    { id: 8, cat: "Floral", image: images[7], label: "Rose Canopy, Lucknow" },
-    { id: 9, cat: "Reception", image: images[6], label: "Crystal Reception, Hyderabad" },
-    { id: 10, cat: "Bridal Entry", image: images[4], label: "Smoke & Light Entry, Chennai" },
-    { id: 11, cat: "Royal Themes", image: images[2], label: "Mughal Garden, Jaisalmer" },
-    { id: 12, cat: "Stage Decor", image: images[5], label: "Ivory Stage, Pune" },
-    { id: 13, cat: "Mandap", image: images[1], label: "Floral Arch Mandap, Goa" },
-    { id: 14, cat: "Floral", image: images[3], label: "Jasmine Wall, Udaipur" },
-  ];
+  const galleryItems: GalleryTile[] = useMemo(() => {
+    if (cmsImages.length > 0) {
+      return cmsImages.map((img) => ({
+        id: img.slotName,
+        cat: img.category || DEFAULT_GALLERY_CATEGORY,
+        image: img.url,
+        label: img.caption || img.altText,
+      }));
+    }
+    return BUNDLED_GALLERY_FALLBACKS.map((item, idx) => ({
+      id: `fallback_${idx}`,
+      cat: item.category,
+      image: item.url,
+      label: item.label,
+    }));
+  }, [cmsImages]);
+
+  // Filters follow the content, so an admin-assigned category always has a matching filter.
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(galleryItems.map((g) => g.cat)))],
+    [galleryItems]
+  );
+
+  // The hero leads with the first published gallery image, so it follows the CMS ordering too.
+  const heroImage = galleryItems[0]?.image || "/images/floral_stage.webp";
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -58,7 +67,7 @@ export default function Gallery() {
       />
       {/* Hero */}
       <section className="relative h-[55vh] flex items-end pb-20 overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${images[3]})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
         <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.4) 100%)" }} />
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12 z-20">
           <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Portfolio</m.p>

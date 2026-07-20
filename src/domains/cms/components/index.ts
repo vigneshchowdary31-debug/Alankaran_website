@@ -4,3 +4,4 @@ export * from "./SectionCard";
 export * from "./PublishControls";
 export * from "./VersionHistoryModal";
 export * from "./TrashModal";
+export * from "./gallery";

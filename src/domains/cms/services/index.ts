@@ -10,3 +10,7 @@ export * from "./cmsHealth.service";
 export { default as cmsHealthService } from "./cmsHealth.service";
 export * from "./systemConfig.service";
 export { default as systemConfigService } from "./systemConfig.service";
+export * from './slotCoverage.service';
+export { default as slotCoverageService } from './slotCoverage.service';
+export * from "./inquiry.service";
+export { default as inquiryService } from "./inquiry.service";

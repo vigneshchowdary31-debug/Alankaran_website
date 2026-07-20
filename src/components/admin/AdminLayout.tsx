@@ -74,6 +74,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           fixed md:sticky top-0 bottom-0 left-0 z-50 w-64 bg-nizami-dark md:bg-black/25 border-r border-gold/15 flex flex-col justify-between p-6 transition-transform duration-300 ease-in-out shrink-0
           ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
+        role="navigation"
+        aria-label="Sidebar navigation"
       >
         <div className="space-y-8">
           {/* Brand Logo & Title */}
@@ -98,7 +100,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Configuration-driven Nav Items */}
-          <nav className="space-y-1.5">
+          <nav className="space-y-1.5" aria-label="Main navigation">
             {navigationItems.map((item) => {
               const isActive = location === item.route;
               const Icon = item.icon;
@@ -107,6 +109,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   key={item.id}
                   href={item.enabled ? item.route : ROUTES.ADMIN.DASHBOARD}
                   onClick={() => setMobileMenuOpen(false)}
+                  aria-current={isActive ? "page" : undefined}
                   className={`
                     flex items-center justify-between px-3.5 py-2.5 rounded-lg font-sans text-sm transition-all
                     ${
@@ -176,7 +179,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* ── Main Content Area with Error Boundary ── */}
-      <main className="flex-1 min-w-0 p-6 md:p-10 lg:p-12 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-4 md:p-8 lg:p-12 overflow-y-auto" role="main" id="main-content">
         <div className="max-w-6xl mx-auto">
           <AdminErrorBoundary>{children}</AdminErrorBoundary>
         </div>

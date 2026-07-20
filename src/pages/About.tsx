@@ -20,10 +20,6 @@ export default function About() {
     getSlotImage("about", "about_collage_1", "/images/coastal_wedding.webp", "Coastal Wedding Detail").url,
     getSlotImage("about", "about_collage_2", "/images/mughal_garden.webp", "Mughal Garden Detail").url,
     getSlotImage("about", "about_floral_stage", "/images/floral_stage.webp", "Floral Stage Detail").url,
-    getSlotImage("about", "about_bridal_entry", "/images/bridal_entry.webp", "Bridal Entry").url,
-    getSlotImage("about", "about_engagement", "/images/engagement_decor.webp", "Engagement Decor").url,
-    getSlotImage("about", "about_reception", "/images/grand_reception.webp", "Grand Reception").url,
-    getSlotImage("about", "about_floral_detail", "/images/floral_detail.webp", "Floral Detail").url,
   ];
 
   const foundersImage = getSlotImage("about", "about_founders", "/images/founders.webp", "Chaitanya & Chandrika Kulkarni").url;

@@ -50,11 +50,14 @@ export class CloudinaryStorage implements IStorageProvider {
         ? options.publicId.split("/").pop()!
         : options.publicId;
       formData.append("public_id", cleanPublicId);
-      formData.append("overwrite", "true");
     }
 
-    // Request delete token from Cloudinary unsigned preset if available
-    formData.append("return_delete_token", "true");
+    // Unsigned uploads accept only a fixed parameter allow-list. Do NOT append
+    // `return_delete_token` or `overwrite` — Cloudinary rejects the whole upload
+    // with "<Param> parameter is not allowed when using unsigned upload."
+    // Sending an API secret to sign the request is not an option in the browser.
+    // Asset lifecycle is tracked in Firestore; cloud-side cleanup is deferred to
+    // a future signed backend job.
 
     const uploadUrl = `${cloudinaryConfig.apiBaseUrl}/${cloudinaryConfig.cloudName}/image/upload`;
 
@@ -101,7 +104,6 @@ export class CloudinaryStorage implements IStorageProvider {
               width: response.width,
               height: response.height,
               resourceType: response.resource_type || "image",
-              deleteToken: response.delete_token,
               createdAt: response.created_at ? new Date(response.created_at).getTime() : Date.now(),
             };
 
@@ -137,60 +139,49 @@ export class CloudinaryStorage implements IStorageProvider {
 
   /**
    * Replace an existing image asset with a new file.
+   *
+   * The new file is uploaded as a NEW Cloudinary asset and the caller is
+   * expected to repoint its Firestore record at the returned URL.
+   *
+   * We deliberately do not reuse `publicId`: overwriting requires the
+   * `overwrite` parameter, which unsigned uploads reject. Without it Cloudinary
+   * silently returns the *existing* asset and discards the new file — the CMS
+   * would report a successful replace while the image never changed.
+   *
+   * The superseded Cloudinary asset is left in place (see `delete`) and will be
+   * reclaimed by a future backend cleanup job.
    */
   public async replace(
-    publicId: string,
+    _publicId: string,
     file: File,
     options?: UploadOptions
   ): Promise<StorageAsset> {
-    // Upload new image while requesting overwrite if using same publicId or clean new ID
-    const replaceOptions: UploadOptions = {
-      ...options,
-      publicId: options?.publicId || publicId,
-    };
-
-    return await this.upload(file, replaceOptions);
+    return await this.upload(file, { ...options, publicId: undefined });
   }
 
   /**
-   * Delete an image from Cloudinary storage.
-   * Uses `delete_by_token` if a delete token was returned during unsigned upload.
+   * Detach an image from the CMS.
+   *
+   * Cloud-side deletion is intentionally disabled. Destroying a Cloudinary asset
+   * requires a signed Admin API call, and the API secret must never reach the
+   * frontend. Unsigned `delete_by_token` is not an option either — it requires
+   * `return_delete_token` at upload time, which Cloudinary rejects for unsigned
+   * presets.
+   *
+   * Firestore remains the source of truth: removing the asset record there is
+   * what takes the image out of the site, Trash, and Version History. Orphaned
+   * Cloudinary assets are expected to accumulate until a backend cleanup job
+   * (signed, server-side) is implemented.
    */
-  public async delete(publicId: string, deleteToken?: string): Promise<boolean> {
-    validateCloudinaryConfig();
-
+  public async delete(publicId: string): Promise<boolean> {
     if (!publicId) return false;
 
-    // If delete token is available, invoke Cloudinary token deletion endpoint
-    if (deleteToken) {
-      try {
-        const deleteUrl = `${cloudinaryConfig.apiBaseUrl}/${cloudinaryConfig.cloudName}/delete_by_token`;
-        const formData = new FormData();
-        formData.append("token", deleteToken);
-
-        const response = await fetch(deleteUrl, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          return result.result === "ok";
-        }
-      } catch (err) {
-        if (import.meta.env.DEV) {
-          console.warn("[CloudinaryStorage] Token deletion failed or expired:", err);
-        }
-      }
-    }
-
-    // If no token exists (or client-side unsigned deletion restricted by Cloudinary security),
-    // log notification and return true to clear the UI preview cleanly.
     if (import.meta.env.DEV) {
       console.info(
-        `[CloudinaryStorage] Client-side UI preview removed for asset: ${publicId}. Note: Permanent cloud deletion without signed backend API key requires Cloudinary Admin access or active delete_token.`
+        `[CloudinaryStorage] Detached asset "${publicId}" from the CMS. The Cloudinary object is retained and will be reclaimed by a future backend cleanup job.`
       );
     }
+
     return true;
   }
 

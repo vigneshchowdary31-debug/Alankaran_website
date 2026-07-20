@@ -19,8 +19,8 @@ export interface NavigationItem {
 }
 
 /**
- * Configuration-driven sidebar navigation items.
- * Future phases can be activated simply by setting `enabled: true` and removing/updating the badge.
+ * Phase 7 Updated: Configuration-driven sidebar navigation items.
+ * All phases 1–6 are active. Activity Log badge updated to "Active".
  */
 export const navigationItems: NavigationItem[] = [
   {
@@ -36,39 +36,39 @@ export const navigationItems: NavigationItem[] = [
     title: "Page Images",
     icon: ImageIcon,
     route: ROUTES.ADMIN.IMAGES,
-    enabled: true, // Route is active and renders Phase 2/3 Cloudinary CDN uploader
+    enabled: true,
     badge: "CDN Active",
-  },
-  {
-    id: "debug",
-    title: "Diagnostics & Health",
-    icon: ShieldCheck,
-    route: ROUTES.ADMIN.DEBUG,
-    enabled: true, // Route is active and renders Phase 3.5 Enterprise Diagnostics Dashboard
-    badge: "Phase 3.5",
   },
   {
     id: "gallery",
     title: "Gallery Manager",
     icon: Images,
     route: ROUTES.ADMIN.GALLERY,
-    enabled: true, // Route is active and renders Phase 5 locked PlaceholderPage
-    badge: "Phase 5",
-  },
-  {
-    id: "settings",
-    title: "CMS Settings",
-    icon: Settings,
-    route: ROUTES.ADMIN.SETTINGS,
-    enabled: true, // Route is active and renders Future locked PlaceholderPage
-    badge: "Future",
+    enabled: true,
+    badge: "Active",
   },
   {
     id: "activity",
     title: "Activity Log",
     icon: History,
     route: ROUTES.ADMIN.ACTIVITY,
-    enabled: true, // Route is active and renders Phase 6 locked PlaceholderPage
-    badge: "Phase 6",
+    enabled: true,
+    badge: "Active",
+  },
+  {
+    id: "debug",
+    title: "Diagnostics & Health",
+    icon: ShieldCheck,
+    route: ROUTES.ADMIN.DEBUG,
+    enabled: true,
+    badge: "Active",
+  },
+  {
+    id: "settings",
+    title: "CMS Settings",
+    icon: Settings,
+    route: ROUTES.ADMIN.SETTINGS,
+    enabled: true,
+    badge: "Future",
   },
 ];

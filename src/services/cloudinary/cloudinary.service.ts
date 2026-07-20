@@ -24,7 +24,7 @@ export interface ICloudinaryService {
     options?: UploadOptions
   ): Promise<ImageAsset>;
 
-  deleteImage(publicId: string, deleteToken?: string): Promise<boolean>;
+  deleteImage(publicId: string): Promise<boolean>;
 }
 
 export const cloudinaryService: ICloudinaryService = {
@@ -95,8 +95,8 @@ export const cloudinaryService: ICloudinaryService = {
     };
   },
 
-  async deleteImage(publicId: string, deleteToken?: string): Promise<boolean> {
-    return await storageProvider.delete(publicId, deleteToken);
+  async deleteImage(publicId: string): Promise<boolean> {
+    return await storageProvider.delete(publicId);
   },
 };
 

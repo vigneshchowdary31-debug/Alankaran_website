@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { AdminLayout } from "./AdminLayout";
-import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, PlaceholderPage } from "@/pages/admin";
+import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, AdminGallery, AdminActivityLog, PlaceholderPage } from "@/pages/admin";
 import { ROUTES } from "@/constants/routes";
 
 export function AdminRouter() {
@@ -49,18 +49,7 @@ export function AdminRouter() {
         component={() => (
           <ProtectedRoute>
             <AdminLayout>
-              <PlaceholderPage
-                title="Gallery & Portfolio Manager"
-                phase="Phase 5"
-                description="Interactive portfolio grid manager for categorizing, reordering, and bulk-uploading real wedding moments."
-                upcomingFeatures={[
-                  "Drag & Drop visual reordering (`@dnd-kit/core`)",
-                  "Category assignment (`Mandap`, `Floral`, `Reception`, `Bridal Entry`, `Royal Themes`)",
-                  "Bulk multi-file upload support up to 20 photos at once",
-                  "Quick search and filtering by location, couple name, or tags",
-                  "One-click lightbox preview test",
-                ]}
-              />
+              <AdminGallery />
             </AdminLayout>
           </ProtectedRoute>
         )}
@@ -104,17 +93,7 @@ export function AdminRouter() {
         component={() => (
           <ProtectedRoute>
             <AdminLayout>
-              <PlaceholderPage
-                title="Activity Log & Rollback Backups"
-                phase="Phase 6"
-                description="Comprehensive audit trail of all image replacements, deletions, and automated JSON backups."
-                upcomingFeatures={[
-                  "Chronological history of all CMS image changes with timestamps",
-                  "Automated snapshot backups (`cms/siteContent_backup`) on every save",
-                  "1-click instant rollback if an image is accidentally deleted or replaced",
-                  "Export complete website image configuration as a JSON file",
-                ]}
-              />
+              <AdminActivityLog />
             </AdminLayout>
           </ProtectedRoute>
         )}

@@ -3,6 +3,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { X, Calendar, CheckSquare, Users, Mail, Phone, User, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { inquiryService } from "@/domains/cms/services";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -49,8 +50,28 @@ export default function BookingModal({ isOpen, onClose, options }: BookingModalP
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Phase A Task 7: persist the lead to `cmsInquiries` instead of simulating a request.
+    try {
+      await inquiryService.submit({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        eventType: form.eventType,
+        message: form.message,
+        eventDate: form.date,
+        guestCount: form.guests,
+        sourcePage: "booking",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Booking Request Failed",
+        description:
+          err?.message || "We couldn't send your request. Please try again or reach us on WhatsApp.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     toast({
       title: "Booking Request Sent",

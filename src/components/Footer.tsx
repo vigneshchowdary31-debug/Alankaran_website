@@ -4,6 +4,8 @@ import { SiFacebook, SiInstagram, SiWhatsapp } from "react-icons/si";
 import { useState } from "react";
 import { useBooking } from "@/context/BookingContext";
 import Logo from "@/components/Logo";
+import { useContactInfo } from "@/providers/SiteContentProvider";
+import { buildWhatsAppUrl, buildMapLinkUrl, toTelHref } from "@/domains/cms/constants";
 
 const services = [
   "Wedding Planning",
@@ -31,6 +33,9 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const { openBookingModal } = useBooking();
+  // Phase A Task 8: contact details resolve from the CMS, not from literals in this file.
+  const contact = useContactInfo();
+  const whatsappUrl = buildWhatsAppUrl(contact);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +58,9 @@ export default function Footer() {
             {/* Social Icons */}
             <div className="flex items-center gap-4 mt-6">
               {[
-                { Icon: SiInstagram, label: "Instagram", href: "https://www.instagram.com/alankaranevents" },
-                { Icon: SiFacebook, label: "Facebook", href: "https://www.facebook.com/alankaranevents" },
-                { Icon: SiWhatsapp, label: "WhatsApp", href: "https://api.whatsapp.com/send/?phone=918977611886&text=Hi%21+Can+you+provide+me+with+more+information+on+your+event+planning+services%3F&type=phone_number&app_absent=0" },
+                { Icon: SiInstagram, label: "Instagram", href: contact.instagramUrl },
+                { Icon: SiFacebook, label: "Facebook", href: contact.facebookUrl },
+                { Icon: SiWhatsapp, label: "WhatsApp", href: whatsappUrl },
               ].map(({ Icon, label, href }) => (
                 <m.a
                   key={label}
@@ -108,20 +113,21 @@ export default function Footer() {
           <div>
             <p className="section-label mb-6 text-gold">Hyderabad Studio</p>
             <div className="space-y-3 mb-8">
-              <a href="mailto:chaitanya@alankaran.com" className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light">
-                chaitanya@alankaran.com
-              </a>
-              <a href="tel:+918977611886" className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light">
-                +91 89776 11886
-              </a>
-              <a href="tel:+918885441188" className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light">
-                +91 88854 41188
-              </a>
-              <a href="https://maps.google.com/?q=Alankaran+Events,+Plot+no:+78,+TNGO's+Colony+Phase+2,+Financial+District,+Gachibowli,+Hyderabad,+Telangana+500046" target="_blank" rel="noopener noreferrer" className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light leading-relaxed">
-                Financial District, Gachibowli, Hyderabad 500046
+              {contact.emails.map((email) => (
+                <a key={email} href={`mailto:${email}`} className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light">
+                  {email}
+                </a>
+              ))}
+              {contact.phones.map((phone) => (
+                <a key={phone} href={toTelHref(phone)} className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light">
+                  {phone}
+                </a>
+              ))}
+              <a href={buildMapLinkUrl(contact)} target="_blank" rel="noopener noreferrer" className="block font-sans text-sm text-stone-400 hover:text-gold transition-colors font-light leading-relaxed">
+                {contact.addressShort}
               </a>
               <a
-                href="https://api.whatsapp.com/send/?phone=918977611886&text=Hi%21+Can+you+provide+me+with+more+information+on+your+event+planning+services%3F&type=phone_number&app_absent=0"
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 font-sans text-[10px] tracking-widest font-semibold uppercase px-4 py-2.5 mt-2 bg-stone-900 border border-gold/30 hover:border-gold hover:text-gold transition-all rounded-full w-full justify-center text-stone-300"

@@ -9,7 +9,6 @@ export interface StorageAsset {
   width?: number;
   height?: number;
   resourceType?: string; // e.g. image
-  deleteToken?: string;
   createdAt: number;
 }
 
@@ -42,9 +41,13 @@ export interface IStorageProvider {
   replace(publicId: string, file: File, options?: UploadOptions): Promise<StorageAsset>;
 
   /**
-   * Delete an asset from storage.
+   * Detach an asset from the CMS.
+   *
+   * Providers that cannot delete safely from the browser (e.g. Cloudinary, where
+   * destroy requires a server-side signature) may treat this as a no-op and let
+   * Firestore removal be the effective delete.
    */
-  delete(publicId: string, deleteToken?: string): Promise<boolean>;
+  delete(publicId: string): Promise<boolean>;
 
   /**
    * Generate an optimized or transformed CDN URL for an asset.

@@ -7,10 +7,12 @@ import React, {
   useMemo,
   type ReactNode,
 } from "react";
-import { firestoreService } from "@/services/firestore";
-import { cmsCacheService, auditLogService } from "@/domains/cms/services";
-import type { CMSSectionContent, SectionKey, CMSSlotMetadata } from "@/domains/cms/types";
-import { CMS_COLLECTION_PATH, DEFAULT_SECTION_SLOTS } from "@/domains/cms/constants";
+import { firestoreService, FirestorePaths } from "@/services/firestore";
+import { cmsCacheService, auditLogService, slotCoverageService } from "@/domains/cms/services";
+import type { CMSSectionContent, SectionKey, CMSSlotMetadata, CMSContactInfo } from "@/domains/cms/types";
+import { PUBLIC_SECTIONS, DEFAULT_CONTACT_INFO } from "@/domains/cms/constants";
+import { resolveGalleryImages, selectPublicSlotMap } from "@/domains/cms/utils/galleryResolver";
+import type { CoverageReport } from "@/domains/cms/services/slotCoverage.service";
 import { useAuth } from "@/context/AuthContext";
 import { useCMSAnalytics } from "@/domains/cms/hooks/useCMSAnalytics";
 
@@ -24,6 +26,17 @@ export interface SiteSlotResolvedImage {
   sectionKey: string;
 }
 
+/** One image in the dynamic gallery collection, resolved for public rendering. */
+export interface SiteGalleryImage {
+  url: string;
+  altText: string;
+  caption?: string;
+  category?: string;
+  order: number;
+  slotName: string;
+  cloudinaryId?: string;
+}
+
 export interface SiteContentContextValue {
   /**
    * Resolves a slot image for the public website (`Task 1, 2, 4, 5`).
@@ -31,9 +44,24 @@ export interface SiteContentContextValue {
    */
   getSlotImage: (sectionKey: SectionKey | string, slotName: string, fallbackUrl: string, fallbackAlt?: string) => SiteSlotResolvedImage;
   /**
+   * Resolves the dynamic gallery collection, ordered by `slot.order` (`Phase A Task 1`).
+   * Returns `[]` when the CMS holds no gallery images, letting callers use bundled defaults.
+   * This is what the Gallery Manager writes to — the two are the same data.
+   */
+  getGalleryImages: () => SiteGalleryImage[];
+  /**
    * Retrieves full section payload if needed.
    */
   getSection: (sectionKey: SectionKey | string) => CMSSectionContent | null;
+  /**
+   * Live CMS coverage report for Diagnostics (`Phase A Task 5`).
+   */
+  getCoverageReport: () => CoverageReport;
+  /**
+   * Site-wide contact details from `cmsSiteContent/contact` (`Phase A Task 8`).
+   * Falls back field-by-field to `DEFAULT_CONTACT_INFO`, so a partially filled document is safe.
+   */
+  contactInfo: CMSContactInfo;
   /**
    * Indicates if initial load from cache/Firestore is currently processing.
    */
@@ -55,7 +83,11 @@ export interface SiteContentContextValue {
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
 
-const CORE_SECTIONS: SectionKey[] = ["hero", "about", "services", "gallery"];
+/**
+ * Every section the public website reads, derived from the slot catalog so a new section never has to
+ * be registered in two places (`Phase A Task 3`).
+ */
+const CORE_SECTIONS: SectionKey[] = PUBLIC_SECTIONS;
 
 export interface SiteContentProviderProps {
   children: ReactNode;
@@ -138,7 +170,7 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
       try {
         const fetchPromises = CORE_SECTIONS.map(async (key) => {
           try {
-            const doc = await firestoreService.get<any>(CMS_COLLECTION_PATH, key);
+            const doc = await firestoreService.get<any>(FirestorePaths.siteContent(key));
             if (doc) {
               const sanitized: CMSSectionContent = {
                 sectionKey: doc.sectionKey || key,
@@ -207,6 +239,8 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
       }
 
       if (slot && slot.url) {
+        // Phase A Task 4: record the hit so Diagnostics can report real coverage.
+        slotCoverageService.record(String(sectionKey), slotName, true);
         return {
           url: slot.url,
           altText: slot.altText || fallbackAlt || `${sectionKey.toUpperCase()} — ${slotName}`,
@@ -218,7 +252,10 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
         };
       }
 
-      // Task 4: Resilient Offline / Bundled Fallback (`Website should never break`)
+      // Task 4: Resilient Offline / Bundled Fallback (`Website should never break`).
+      // Phase A Task 4: the fallback is no longer silent — it is recorded here, warned about in DEV,
+      // and reported in Diagnostics.
+      slotCoverageService.record(String(sectionKey), slotName, false, fallbackUrl);
       return {
         url: fallbackUrl,
         altText: fallbackAlt || `${sectionKey.toUpperCase()} — ${slotName} (Bundled Fallback)`,
@@ -231,17 +268,70 @@ export function SiteContentProvider({ children }: SiteContentProviderProps) {
     [sections, previewMode, currentUser]
   );
 
+  /**
+   * Phase A Task 1 — Dynamic gallery resolution.
+   *
+   * The gallery is an admin-managed collection, not a fixed slot list: whatever the Gallery Manager
+   * writes into `cmsSiteContent/gallery` is exactly what renders here, ordered by `slot.order`.
+   * Deleted and hidden slots are excluded. Returns `[]` when the CMS has no gallery content so the
+   * caller can fall back to bundled defaults.
+   */
+  const getGalleryImages = useCallback((): SiteGalleryImage[] => {
+    const slotMap = selectPublicSlotMap(sections["gallery"], previewMode && Boolean(currentUser));
+    const images = resolveGalleryImages(slotMap);
+    slotCoverageService.recordGalleryCount(images.length);
+    return images;
+  }, [sections, previewMode, currentUser]);
+
+  const getCoverageReport = useCallback(
+    (): CoverageReport => slotCoverageService.buildReport(sections),
+    [sections]
+  );
+
+  /**
+   * Phase A Task 8 — one source of truth for contact details.
+   * Stored as a `contact` payload on the `cmsSiteContent/contact` document (beside that section's
+   * image slots). Merged over the bundled defaults so a missing or partial record still renders.
+   */
+  const contactInfo = useMemo<CMSContactInfo>(() => {
+    const stored = (sections["contact"] as any)?.contact;
+    if (!stored || typeof stored !== "object") return DEFAULT_CONTACT_INFO;
+    return {
+      ...DEFAULT_CONTACT_INFO,
+      ...stored,
+      // Never let an empty array blank out the site's only phone number or email.
+      phones: stored.phones?.length ? stored.phones : DEFAULT_CONTACT_INFO.phones,
+      emails: stored.emails?.length ? stored.emails : DEFAULT_CONTACT_INFO.emails,
+      studios: stored.studios?.length ? stored.studios : DEFAULT_CONTACT_INFO.studios,
+    };
+  }, [sections]);
+
   const value = useMemo(
     () => ({
       getSlotImage,
+      getGalleryImages,
       getSection,
+      getCoverageReport,
+      contactInfo,
       isLoading,
       isOffline,
       previewMode: previewMode && Boolean(currentUser),
       setPreviewMode,
       refreshAll,
     }),
-    [getSlotImage, getSection, isLoading, isOffline, previewMode, currentUser, setPreviewMode, refreshAll]
+    [
+      getSlotImage,
+      getGalleryImages,
+      getSection,
+      getCoverageReport,
+      contactInfo,
+      isLoading,
+      isOffline,
+      previewMode,
+      currentUser,
+      setPreviewMode,
+      refreshAll,
+    ]
   );
 
   return <SiteContentContext.Provider value={value}>{children}</SiteContentContext.Provider>;
@@ -257,4 +347,12 @@ export function useSiteContent(): SiteContentContextValue {
     throw new Error("useSiteContent must be used within a <SiteContentProvider>.");
   }
   return context;
+}
+
+/**
+ * Convenience hook for the site-wide contact details (`Phase A Task 8`).
+ * Every phone number, email, address, social link, and WhatsApp URL on the website resolves here.
+ */
+export function useContactInfo(): CMSContactInfo {
+  return useSiteContent().contactInfo;
 }

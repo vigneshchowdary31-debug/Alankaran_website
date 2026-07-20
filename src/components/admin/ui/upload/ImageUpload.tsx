@@ -166,7 +166,7 @@ export function ImageUpload({
 
     setIsDeleting(true);
     try {
-      await cloudinaryService.deleteImage(currentAsset.cloudinaryId, (currentAsset as any).deleteToken);
+      await cloudinaryService.deleteImage(currentAsset.cloudinaryId);
       setCurrentAsset(null);
       setDeleteDialogOpen(false);
       showSuccess("Image Removed", `Asset "${currentAsset.altText || slotName}" has been removed from storage.`);

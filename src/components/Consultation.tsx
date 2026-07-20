@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { m } from "framer-motion";
 import { Calendar, CheckSquare } from "lucide-react";
+import { inquiryService } from "@/domains/cms/services";
 
 const sources = ["A Friend", "Instagram", "Facebook", "Blog or Magazine"];
 
@@ -20,6 +21,8 @@ export default function Consultation() {
     sources: [] as string[],
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function toggle(src: string) {
     setForm((f) => ({
@@ -30,9 +33,33 @@ export default function Consultation() {
     }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setSubmitError(null);
+
+    // Phase A Task 7: persist the consultation request before confirming it to the visitor.
+    try {
+      await inquiryService.submit({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        eventType: form.event,
+        message: "",
+        eventDate: form.date,
+        guestCount: form.guests,
+        company: form.company,
+        referralSource: form.sources.join(", "),
+        sourcePage: "consultation",
+      });
+      setSubmitted(true);
+    } catch (err: any) {
+      setSubmitError(
+        err?.message || "We couldn't send your request. Please try again, or reach us on WhatsApp."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -337,15 +364,22 @@ export default function Consultation() {
                 />
               </div>
 
+              {submitError && (
+                <p className="text-red-400 text-xs font-sans" data-testid="consultation-error">
+                  {submitError}
+                </p>
+              )}
+
               {/* Submit */}
               <m.button
                 type="submit"
-                className="w-full py-4 font-sans text-xs uppercase tracking-widest transition-all bg-gold text-primary-foreground hover:bg-gold-hover hover:gold-glow font-bold rounded-full border border-gold/20 shadow-md"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={submitting}
+                className="w-full py-4 font-sans text-xs uppercase tracking-widest transition-all bg-gold text-primary-foreground hover:bg-gold-hover hover:gold-glow font-bold rounded-full border border-gold/20 shadow-md disabled:opacity-60"
+                whileHover={{ scale: submitting ? 1 : 1.01 }}
+                whileTap={{ scale: submitting ? 1 : 0.98 }}
                 data-testid="btn-consultation-submit"
               >
-                Request Consultation
+                {submitting ? "Sending..." : "Request Consultation"}
               </m.button>
             </m.form>
           )}

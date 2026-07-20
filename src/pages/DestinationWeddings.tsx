@@ -4,6 +4,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { ChevronDown, MapPin, Check, ArrowRight, Users, Calendar } from "lucide-react";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import { inquiryService } from "@/domains/cms/services";
 
 const weddingStyles = [
   {
@@ -135,6 +136,54 @@ export default function DestinationWeddings() {
   const [selectedGuests, setSelectedGuests] = useState("100–200");
   const [selectedType, setSelectedType] = useState("Beach");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Phase A Task 7: this form previously had no state and simply navigated to /contact, discarding
+  // whatever the visitor typed. It now persists to `cmsInquiries`.
+  const [planForm, setPlanForm] = useState({
+    name: "",
+    phone: "",
+    month: "",
+    destination: "",
+    whatsappOptIn: true,
+  });
+  const [planSubmitting, setPlanSubmitting] = useState(false);
+  const [planSubmitted, setPlanSubmitted] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
+
+  const handlePlanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (planForm.name.trim().length < 2) {
+      setPlanError("Please enter your full name.");
+      return;
+    }
+    if (planForm.phone.replace(/\D/g, "").length < 10) {
+      setPlanError("Please enter a valid phone number.");
+      return;
+    }
+    setPlanError(null);
+    setPlanSubmitting(true);
+
+    try {
+      await inquiryService.submit({
+        name: planForm.name,
+        phone: planForm.phone,
+        email: "",
+        eventType: `Destination Wedding${planForm.destination ? ` — ${planForm.destination}` : ""}`,
+        message: `Guest range: ${selectedGuests}. Style: ${selectedType}. WhatsApp updates: ${planForm.whatsappOptIn ? "yes" : "no"}.`,
+        eventDate: planForm.month,
+        location: planForm.destination,
+        guestCount: selectedGuests,
+        sourcePage: "destinations",
+      });
+      setPlanSubmitted(true);
+    } catch (err: any) {
+      setPlanError(
+        err?.message || "We couldn't send your request. Please try again, or reach us on WhatsApp."
+      );
+    } finally {
+      setPlanSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-background text-foreground">
@@ -602,12 +651,23 @@ export default function DestinationWeddings() {
             <p className="text-muted-foreground font-sans text-sm font-light text-center mb-10">Share a few details. We will respond with a shortlist and a clear budget range.</p>
 
             <div className="border border-stone-200 rounded-2xl p-8 bg-white shadow-sm">
-              <div className="space-y-5">
+              {planSubmitted ? (
+                <div className="text-center py-10" data-testid="destination-form-success">
+                  <p className="font-serif text-2xl text-foreground mb-2">Thank You</p>
+                  <p className="text-muted-foreground font-sans text-sm font-light">
+                    We have received your request and will respond with a shortlist and budget range
+                    within 24 hours.
+                  </p>
+                </div>
+              ) : (
+              <form className="space-y-5" onSubmit={handlePlanSubmit} noValidate data-testid="destination-form">
                 <div>
                   <label className="block text-xs font-sans font-medium text-foreground mb-2 uppercase tracking-wider">Full Name</label>
                   <input
                     id="destination-name-input"
                     type="text"
+                    value={planForm.name}
+                    onChange={(e) => setPlanForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder="Enter your full name"
                     className="w-full border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-gold/60 transition-colors"
                   />
@@ -618,6 +678,8 @@ export default function DestinationWeddings() {
                     <span className="flex-shrink-0 border border-stone-200 rounded-lg px-3 py-3 text-sm font-sans text-foreground bg-stone-50">+91</span>
                     <input
                       type="tel"
+                      value={planForm.phone}
+                      onChange={(e) => setPlanForm((f) => ({ ...f, phone: e.target.value }))}
                       placeholder="Enter phone number"
                       className="flex-1 border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-gold/60 transition-colors"
                     />
@@ -626,7 +688,11 @@ export default function DestinationWeddings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-sans font-medium text-foreground mb-2 uppercase tracking-wider">Event Month</label>
-                    <select className="w-full border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground focus:outline-none focus:border-gold/60 transition-colors bg-white">
+                    <select
+                      value={planForm.month}
+                      onChange={(e) => setPlanForm((f) => ({ ...f, month: e.target.value }))}
+                      className="w-full border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground focus:outline-none focus:border-gold/60 transition-colors bg-white"
+                    >
                       <option value="">Select a Month</option>
                       {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
                         <option key={m}>{m}</option>
@@ -635,7 +701,11 @@ export default function DestinationWeddings() {
                   </div>
                   <div>
                     <label className="block text-xs font-sans font-medium text-foreground mb-2 uppercase tracking-wider">Destination</label>
-                    <select className="w-full border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground focus:outline-none focus:border-gold/60 transition-colors bg-white">
+                    <select
+                      value={planForm.destination}
+                      onChange={(e) => setPlanForm((f) => ({ ...f, destination: e.target.value }))}
+                      className="w-full border border-stone-200 rounded-lg px-4 py-3 text-sm font-sans text-foreground focus:outline-none focus:border-gold/60 transition-colors bg-white"
+                    >
                       <option value="">Select a Location</option>
                       {["Goa", "Udaipur", "Jaipur", "Jodhpur", "Kerala", "Jaisalmer", "Coorg", "International"].map(l => (
                         <option key={l}>{l}</option>
@@ -644,15 +714,27 @@ export default function DestinationWeddings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="whatsapp" defaultChecked className="accent-gold" />
+                  <input
+                    type="checkbox"
+                    id="whatsapp"
+                    checked={planForm.whatsappOptIn}
+                    onChange={(e) => setPlanForm((f) => ({ ...f, whatsappOptIn: e.target.checked }))}
+                    className="accent-gold"
+                  />
                   <label htmlFor="whatsapp" className="text-sm font-sans text-muted-foreground">Send me updates on WhatsApp</label>
                 </div>
-                <Link href="/contact">
-                  <button className="w-full py-4 bg-gold text-background font-sans text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors mt-2">
-                    Request a Plan
-                  </button>
-                </Link>
-              </div>
+                {planError && (
+                  <p className="text-red-500 text-xs font-sans" data-testid="destination-form-error">{planError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={planSubmitting}
+                  className="w-full py-4 bg-gold text-background font-sans text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors mt-2 disabled:opacity-60"
+                >
+                  {planSubmitting ? "Sending..." : "Request a Plan"}
+                </button>
+              </form>
+              )}
             </div>
           </div>
         </div>

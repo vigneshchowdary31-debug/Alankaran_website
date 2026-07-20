@@ -3,11 +3,23 @@ rules_version = '2';
 /**
  * Alankaran Custom Image CMS — Firestore Security Rules (`Task 11`)
  *
- * Current Phase 3 Policy:
- * - All administrative documents inside `cms/siteContent/{sectionKey}` are accessible strictly to authenticated users (`request.auth != null`).
- * - Unauthenticated requests (public web users without an active administrator session) are denied access by default.
+ * Schema (single source of truth: `src/services/firestore/firestorePaths.ts`):
+ *   cmsSiteContent/{sectionKey}              — hero, about, services, gallery, testimonials, contact, settings
+ *   cmsVersions/{sectionKey}_{versionId}     — immutable publish snapshots
+ *   cmsTrash/{trashId}                       — soft-deleted slots
+ *   cmsAuditLogs/{logId}                     — administrative activity entries
+ *   cmsSettings/system                       — CMS runtime configuration
+ *   cmsInquiries/{inquiryId}                 — public form submissions
  *
- * Future Phase 4 & Role-Based Access Control (RBAC) Extension Strategy:
+ * Every collection is top-level, so each match below addresses an even-segment document path.
+ *
+ * Current Policy:
+ * - All administrative documents are accessible strictly to authenticated users (`request.auth != null`).
+ * - Unauthenticated requests (public web users without an active administrator session) are denied by default.
+ * - `cmsInquiries` is the ONE exception: anonymous visitors must be able to submit a contact form, so
+ *   create is open but tightly shape-validated. Reading inquiries back still requires admin auth.
+ *
+ * Future Role-Based Access Control (RBAC) Extension Strategy:
  * - Admin (`role == 'Admin'`): Full CRUD access to all sections (`hero`, `about`, `services`, `gallery`, `settings`).
  * - Editor (`role == 'Editor'`): Write access to content slots (`hero`, `about`, `services`, `gallery`), but read-only for `settings`.
  * - Viewer (`role == 'Viewer'`): Read-only access to verify administrative drafts without write permissions.
@@ -22,10 +34,60 @@ rules_version = '2';
  */
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Phase 3 & 4 CMS Configuration & Image Slots: /cms/siteContent/{sectionKey}
-    match /cms/siteContent/{sectionKey} {
-      // Allow read/write exclusively if signed in via Firebase Authentication
-      allow read, write: if request.auth != null;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // CMS image slot documents: /cmsSiteContent/{sectionKey}
+    match /cmsSiteContent/{sectionKey} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Immutable publish snapshots: /cmsVersions/{versionId}
+    match /cmsVersions/{versionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Soft-deleted slot records: /cmsTrash/{trashId}
+    match /cmsTrash/{trashId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Administrative activity entries: /cmsAuditLogs/{logId}
+    match /cmsAuditLogs/{logId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // CMS runtime configuration: /cmsSettings/{docId}
+    match /cmsSettings/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Public inquiry submissions: /cmsInquiries/{inquiryId}
+    //
+    // Visitors are anonymous, so `create` cannot require auth. It is instead constrained to the exact
+    // inquiry shape: no unknown fields, bounded string lengths, a known sourcePage, and `status`
+    // pinned to "new" so a submitter cannot forge a triaged lead. Only admins can read, re-triage, or
+    // delete. Inquiries are immutable to their submitter — there is no anonymous update path.
+    match /cmsInquiries/{inquiryId} {
+      allow read, update, delete: if isSignedIn();
+
+      allow create: if isValidInquiry(request.resource.data);
+    }
+
+    function isValidInquiry(d) {
+      return d.keys().hasAll(['id', 'name', 'phone', 'email', 'eventType', 'message', 'createdAt', 'status', 'sourcePage'])
+        && d.keys().hasOnly(['id', 'name', 'phone', 'email', 'eventType', 'message', 'createdAt', 'status',
+                             'sourcePage', 'eventDate', 'guestCount', 'location', 'budget', 'company', 'referralSource'])
+        && d.status == 'new'
+        && d.sourcePage in ['contact', 'booking', 'consultation', 'destinations']
+        && d.createdAt is number
+        && d.id is string && d.id.size() <= 64
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 120
+        && d.phone is string && d.phone.size() >= 6 && d.phone.size() <= 32
+        && d.email is string && d.email.size() <= 254
+        && d.eventType is string && d.eventType.size() <= 64
+        && d.message is string && d.message.size() <= 2000;
     }
 
     // Default deny rule for any unexpected or unmodeled collections

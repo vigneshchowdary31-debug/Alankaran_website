@@ -1,4 +1,4 @@
-import { firestoreService } from "@/services/firestore";
+import { firestoreService, FirestorePaths } from "@/services/firestore";
 import { validateEnvironment } from "../utils/envValidator";
 import { cmsCacheService } from "./cmsCache.service";
 import type { CMSHealthReport } from "../types";
@@ -50,8 +50,8 @@ class CMSHealthService {
     }
 
     try {
-      // Execute lightweight latency test using firestoreService.get on settings document
-      await firestoreService.get("cms/siteContent", "settings");
+      // Execute lightweight latency test using firestoreService.get on the system settings document
+      await firestoreService.get(FirestorePaths.settings());
       latencyMs = Date.now() - startTime;
       firestoreReachable = true;
       firestoreMsg = `Operational (${latencyMs}ms response latency)`;
