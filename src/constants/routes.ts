@@ -20,6 +20,7 @@ export const ROUTES = {
     IMAGES: "/admin/images",
     DEBUG: "/admin/debug",
     GALLERY: "/admin/gallery",
+    STORIES: "/admin/wedding-stories",
     SETTINGS: "/admin/settings",
     ACTIVITY: "/admin/activity",
   },

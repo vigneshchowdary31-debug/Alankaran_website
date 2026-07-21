@@ -39,8 +39,31 @@ service cloud.firestore {
     }
 
     // CMS image slot documents: /cmsSiteContent/{sectionKey}
+    //
+    // READ IS PUBLIC — and must be. This is the content the public website renders. Every visitor is
+    // anonymous, so requiring auth here silently denied every read: `SiteContentProvider` caught the
+    // error, left `sections` empty, and every slot fell back to its bundled local image. The CMS
+    // appeared to work because the fallbacks are the same photographs that were uploaded to
+    // Cloudinary — visually identical, so nothing published ever reached a visitor.
+    //
+    // Exposure is limited to what the site already serves publicly: Cloudinary URLs (public by
+    // construction), image dimensions, alt text, and the contact details printed in the footer.
+    // Draft slots are readable too, which is accepted: a draft here is an image URL, not a secret.
+    // Everything genuinely sensitive — audit logs, trash, settings, inquiries — stays auth-only below.
     match /cmsSiteContent/{sectionKey} {
-      allow read, write: if isSignedIn();
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Wedding Stories: /weddingStories/{docId}
+    //
+    // Same public-read policy as cmsSiteContent — the public Wedding Stories page renders this, and
+    // every visitor is anonymous. Contents are the same kind of already-public data: Cloudinary
+    // image URLs, couple names, locations, and story prose that appears on the live page. Writes
+    // require an authenticated admin.
+    match /weddingStories/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
     // Immutable publish snapshots: /cmsVersions/{versionId}

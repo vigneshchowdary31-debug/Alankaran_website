@@ -3,8 +3,13 @@ import { m } from "framer-motion";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { useSiteContent } from "@/providers/SiteContentProvider";
+import { useWeddingStories } from "@/providers/WeddingStoriesProvider";
 
-const stories = [
+/**
+ * Bundled fallback stories — the original hardcoded content. Rendered only while the CMS holds no
+ * published stories, so a fresh install (or an offline visitor) still sees a complete page.
+ */
+const FALLBACK_STORIES = [
   {
     couple: "Priya & Arjun",
     date: "March 2024",
@@ -40,14 +45,26 @@ const stories = [
   },
 ];
 
+/** Normalized shape the JSX renders, so CMS and bundled content flow through one code path. */
+interface StoryView {
+  key: string;
+  couple: string;
+  date: string;
+  location: string;
+  theme: string;
+  color: string;
+  story: string[];
+  /** Four image URLs: [header, large grid, small-top, small-bottom]. */
+  img: [string, string, string, string];
+}
+
 export default function WeddingStories() {
   const { getGalleryImages } = useSiteContent();
+  const { hero, stories: cmsStories } = useWeddingStories();
 
-  // Phase A Task 1: story imagery is drawn from the CMS gallery collection in published order,
-  // falling back to bundled assets for positions the admin has not filled yet.
+  // Bundled imagery, drawn from the CMS gallery in published order, falling back to local assets.
   const gallery = getGalleryImages();
   const pick = (index: number, fallbackUrl: string) => gallery[index]?.url || fallbackUrl;
-
   const images = [
     pick(0, "/images/royal_mandap.webp"),
     pick(1, "/images/coastal_wedding.webp"),
@@ -59,6 +76,54 @@ export default function WeddingStories() {
     pick(7, "/images/floral_detail.webp"),
   ];
 
+  // CMS published stories when present; otherwise the bundled fallback set. The bundled path
+  // reproduces the exact image cycling the page used before, so it stays visually identical.
+  const stories: StoryView[] =
+    cmsStories && cmsStories.length > 0
+      ? cmsStories.map((s, i) => ({
+          key: s.id,
+          couple: `${s.bride} & ${s.groom}`.trim().replace(/^&\s*|\s*&$/g, "") || `Story ${i + 1}`,
+          date: [s.month, s.year].filter(Boolean).join(" "),
+          location: s.location,
+          theme: s.theme,
+          color: s.palette,
+          story: [s.paragraph1, s.paragraph2].filter(Boolean),
+          img: [
+            s.images[0]?.url || images[i % images.length],
+            s.images[1]?.url || images[(i + 1) % images.length],
+            s.images[2]?.url || images[(i + 2) % images.length],
+            s.images[3]?.url || images[i % images.length],
+          ],
+        }))
+      : FALLBACK_STORIES.map((s, i) => ({
+          key: s.couple,
+          couple: s.couple,
+          date: s.date,
+          location: s.location,
+          theme: s.theme,
+          color: s.color,
+          story: s.story,
+          img: [
+            images[i % images.length],
+            images[(i + 1) % images.length],
+            images[(i + 2) % images.length],
+            images[i % images.length],
+          ],
+        }));
+
+  // Hero: published CMS hero when available, otherwise the original bundled text/image.
+  const heroImage = hero?.publishedImage?.url || hero?.image?.url || images[0];
+  const heroSubtitle = hero?.publishedSubtitle || hero?.subtitle || "Real Weddings";
+  const heroTitle1 = hero?.publishedTitleLine1 || hero?.titleLine1 || "Celebrations";
+  const heroTitle2 = hero?.publishedTitleLine2 || hero?.titleLine2 || "That Live Forever";
+  // Overlay opacity multiplies the original three-stop gradient; default 1 = the current look.
+  const ov = hero?.publishedOverlayOpacity ?? hero?.overlayOpacity ?? 1;
+  const heroGradient = `linear-gradient(to top, rgba(0,0,0,${0.72 * ov}) 0%, rgba(0,0,0,${0.25 * ov}) 60%, rgba(0,0,0,${0.4 * ov}) 100%)`;
+  // Split the title's last word so it keeps the gold-gradient treatment, matching the original.
+  const t2words = heroTitle2.split(" ");
+  const t2lead = t2words.slice(0, -1).join(" ");
+  const t2last = t2words.slice(-1)[0] || "";
+
   return (
     <div className="bg-background text-foreground">
       <SEO
@@ -67,20 +132,20 @@ export default function WeddingStories() {
       />
       {/* Hero */}
       <section className="relative h-[65vh] flex items-end pb-20 overflow-hidden">
-        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${images[0]})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
-        <div className="absolute inset-0 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.4) 100%)" }} />
+        <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.85) saturate(1.0)" }} />
+        <div className="absolute inset-0 z-10" style={{ background: heroGradient }} />
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12 z-20">
-          <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Real Weddings</m.p>
+          <m.p className="section-label mb-4 text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{heroSubtitle}</m.p>
           <m.h1 className="text-display text-5xl lg:text-8xl text-white" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 1 }}>
-            Celebrations<br />That Live <em className="not-italic text-gold-gradient">Forever</em>
+            {heroTitle1}<br />{t2lead} <em className="not-italic text-gold-gradient">{t2last}</em>
           </m.h1>
         </div>
       </section>
 
       {/* Stories */}
       <div className="max-w-screen-xl mx-auto px-6 lg:px-12">
-        {stories.map((s, i) => (
-          <article key={s.couple} className="py-24 border-b border-border/40">
+        {stories.map((s) => (
+          <article key={s.key} className="py-24 border-b border-border/40">
             {/* Header */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-12">
               <div>
@@ -108,7 +173,7 @@ export default function WeddingStories() {
                 </div>
               </div>
               <div className="overflow-hidden group glass-card">
-                <div className="aspect-[16/9] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${images[i % images.length]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                <div className="aspect-[16/9] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${s.img[0]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
               </div>
             </div>
 
@@ -124,14 +189,14 @@ export default function WeddingStories() {
             {/* Image grid */}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 overflow-hidden group">
-                <div className="w-full h-full aspect-[16/9] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${images[(i + 1) % images.length]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                <div className="w-full h-full aspect-[16/9] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${s.img[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
               </div>
               <div className="space-y-3 flex flex-col">
                 <div className="overflow-hidden group flex-1">
-                  <div className="w-full h-full min-h-[150px] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${images[(i + 2) % images.length]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  <div className="w-full h-full min-h-[150px] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${s.img[2]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
                 </div>
                 <div className="overflow-hidden group flex-1">
-                  <div className="w-full h-full min-h-[150px] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${images[i % images.length]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  <div className="w-full h-full min-h-[150px] transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${s.img[3]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
                 </div>
               </div>
             </div>

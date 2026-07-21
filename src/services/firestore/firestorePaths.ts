@@ -21,6 +21,8 @@ export const FIRESTORE_COLLECTIONS = {
   SETTINGS: "cmsSettings",
   /** Public website inquiry submissions: `cmsInquiries/{inquiryId}` */
   INQUIRIES: "cmsInquiries",
+  /** Wedding Stories documents: `weddingStories/{storyId}` (+ the reserved `__hero` doc). */
+  WEDDING_STORIES: "weddingStories",
 } as const;
 
 export type FirestoreCollectionName =
@@ -87,6 +89,19 @@ export const FirestorePaths = {
   inquiry: (inquiryId: string): FirestoreDocumentPath => ({
     collection: FIRESTORE_COLLECTIONS.INQUIRIES,
     docId: inquiryId,
+  }),
+
+  weddingStoriesCollection: (): FirestoreCollectionName => FIRESTORE_COLLECTIONS.WEDDING_STORIES,
+
+  weddingStory: (storyId: string): FirestoreDocumentPath => ({
+    collection: FIRESTORE_COLLECTIONS.WEDDING_STORIES,
+    docId: storyId,
+  }),
+
+  /** The reserved singleton document holding the Wedding Stories hero. */
+  weddingStoriesHero: (): FirestoreDocumentPath => ({
+    collection: FIRESTORE_COLLECTIONS.WEDDING_STORIES,
+    docId: "__hero",
   }),
 } as const;
 

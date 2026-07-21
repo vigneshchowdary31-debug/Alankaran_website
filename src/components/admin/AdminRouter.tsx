@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { AdminLayout } from "./AdminLayout";
-import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, AdminGallery, AdminActivityLog, AdminSettings, PlaceholderPage } from "@/pages/admin";
+import { AdminLogin, AdminDashboard, AdminImages, AdminDebug, AdminGallery, AdminActivityLog, AdminSettings, WeddingStoriesAdmin, PlaceholderPage } from "@/pages/admin";
 import { ROUTES } from "@/constants/routes";
 
 export function AdminRouter() {
@@ -50,6 +50,17 @@ export function AdminRouter() {
           <ProtectedRoute>
             <AdminLayout>
               <AdminGallery />
+            </AdminLayout>
+          </ProtectedRoute>
+        )}
+      />
+
+      <Route
+        path={ROUTES.ADMIN.STORIES}
+        component={() => (
+          <ProtectedRoute>
+            <AdminLayout>
+              <WeddingStoriesAdmin />
             </AdminLayout>
           </ProtectedRoute>
         )}

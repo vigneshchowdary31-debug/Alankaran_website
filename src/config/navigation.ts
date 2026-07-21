@@ -6,6 +6,7 @@ import {
   Settings,
   History,
   ShieldCheck,
+  Heart,
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 
@@ -44,6 +45,14 @@ export const navigationItems: NavigationItem[] = [
     title: "Gallery Manager",
     icon: Images,
     route: ROUTES.ADMIN.GALLERY,
+    enabled: true,
+    badge: "Active",
+  },
+  {
+    id: "wedding-stories",
+    title: "Wedding Stories",
+    icon: Heart,
+    route: ROUTES.ADMIN.STORIES,
     enabled: true,
     badge: "Active",
   },
