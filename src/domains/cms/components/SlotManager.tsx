@@ -3,7 +3,7 @@ import { useSection } from "../hooks/useSection";
 import type { SectionKey, CMSSlotMetadata } from "../types";
 import { ImageUpload } from "@/components/admin/ui/upload/ImageUpload";
 import type { ImageAsset } from "@/types";
-import { Loader2, Database } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -74,13 +74,13 @@ export function SlotManager({
 
     const success = await saveSlot(slotName, metadata);
     if (success) {
-      showSuccess("CMS Database Updated", `Saved image metadata to Firestore [cmsSiteContent/${sectionKey}]`);
+      showSuccess("Image Updated", `"${label || slotName}" is now live on your website.`);
     } else {
-      // The Cloudinary upload already reported success, so a silent Firestore failure here reads as
-      // "the upload worked" while nothing was persisted. Always surface it.
+      // The Cloudinary upload already reported success, so a silent save failure here reads as
+      // "the upload worked" while nothing was persisted. Always surface it — in client language.
       showError(
-        "Firestore Save Failed",
-        `Image reached Cloudinary but its metadata was NOT written to cmsSiteContent/${sectionKey}. See the console for the document path, UID, and error code.`
+        "Couldn't Save Image",
+        `"${label || slotName}" uploaded but couldn't be saved. Please try again.`
       );
     }
   };
@@ -97,33 +97,27 @@ export function SlotManager({
     const ok = await softDelete(slotName, currentUser?.email || "admin@alankaran.com");
     if (ok) {
       showSuccess(
-        "Moved to Trash",
-        `"${label || slotName}" was removed from ${sectionKey} and archived in Trash. Publish the section to take it off the live site.`
+        "Image Removed",
+        `"${label || slotName}" has been removed from your website and archived in Trash.`
       );
     } else {
       showError(
-        "Delete Failed",
-        `"${label || slotName}" could not be removed from cmsSiteContent/${sectionKey}. It is still live — see the console for the document path and error code.`
+        "Couldn't Remove Image",
+        `"${label || slotName}" couldn't be removed and is still live. Please try again.`
       );
     }
   };
 
   return (
     <div className="relative">
-      {/* ── Status Bar for Section Synchronization ── */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <div className="flex items-center gap-1.5 text-[10px] font-mono text-stone-400">
-          <Database className="size-3 text-gold" />
-          <span>FIRESTORE SLOT: <strong className="text-stone-200">{sectionKey}/{slotName}</strong></span>
+      {/* Quiet saving indicator — only appears mid-save. The developer "FIRESTORE SLOT" label was
+          removed as part of the client-facing polish; behaviour is unchanged. */}
+      {status === "saving" && (
+        <div className="flex items-center justify-end gap-1.5 mb-2 text-[11px] text-gold/90">
+          <Loader2 className="size-3 animate-spin" />
+          <span>Saving…</span>
         </div>
-
-        {status === "saving" && (
-          <div className="flex items-center gap-1.5 text-[10px] font-mono text-gold animate-pulse">
-            <Loader2 className="size-3 animate-spin" />
-            <span>Persisting to cloud...</span>
-          </div>
-        )}
-      </div>
+      )}
 
       <ImageUpload
         sectionKey={sectionKey}

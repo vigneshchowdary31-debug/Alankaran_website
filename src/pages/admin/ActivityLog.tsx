@@ -145,9 +145,9 @@ export function AdminActivityLog() {
 
       {/* Page Header */}
       <PageHeader
-        badge="Phase 7 Production Polish Active"
-        title="Activity Log & Audit Trail"
-        description="A chronological record of every administrative action performed inside the CMS — uploads, deletions, publishes, restores, logins, and cache operations. Auto-refreshes every 30 seconds."
+        
+        title="Activity Log"
+        description="A record of every change made in your CMS."
       >
         <Link href={ROUTES.ADMIN.DASHBOARD}>
           <Button

@@ -114,9 +114,9 @@ export function UploadDropzone({
         {error ? <AlertCircle className="size-6" /> : <UploadCloud className="size-6" />}
       </div>
 
-      <p className="font-serif text-sm text-stone-200 text-center font-normal mb-1">
+      <p className="font-serif text-sm text-white/90 text-center font-normal mb-1">
         {isDragging ? (
-          <span className="text-gold font-semibold">Drop image here to begin upload</span>
+          <span className="text-gold font-semibold">Drop your image here</span>
         ) : (
           <>
             <span className="text-gold font-medium underline underline-offset-4">Click to upload</span> or drag and drop
@@ -124,13 +124,13 @@ export function UploadDropzone({
         )}
       </p>
 
-      <p className="font-sans text-xs text-stone-400 text-center font-light mt-1">
-        Supports JPG, PNG, WEBP, and SVG up to {APP_CONFIG.MAX_UPLOAD_SIZE_MB} MB
+      <p className="font-sans text-xs text-white/55 text-center font-light mt-1">
+        JPG, PNG, WEBP, or SVG · up to {APP_CONFIG.MAX_UPLOAD_SIZE_MB} MB
       </p>
 
-      <div className="mt-4 flex items-center gap-2 text-[10px] font-mono text-stone-500 bg-stone-900/80 border border-stone-800 px-3 py-1 rounded-full">
+      <div className="mt-4 flex items-center gap-2 text-[11px] text-white/45 bg-stone-900/60 border border-stone-800 px-3 py-1 rounded-full">
         <FileImage className="size-3 text-gold/80" />
-        <span>Client-side auto-optimization active</span>
+        <span>Optimized automatically</span>
       </div>
     </div>
   );

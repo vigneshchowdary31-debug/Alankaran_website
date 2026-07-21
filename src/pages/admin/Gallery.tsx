@@ -27,9 +27,9 @@ export function AdminGallery() {
 
       {/* Page Header */}
       <PageHeader
-        badge="Phase 6 Enterprise Gallery Management Active"
-        title="Gallery & Portfolio Content Manager"
-        description="Comprehensive image management studio for your luxury wedding portfolio. Upload multiple moments in bulk, reorder visually, categorize across royal themes, and simulate multi-device grids before publishing."
+        
+        title="Gallery"
+        description="Add, organize, and publish the photos in your website gallery."
       >
         <Link href={ROUTES.ADMIN.DASHBOARD}>
           <Button variant="outline" size="sm" className="gap-2 text-xs font-sans border-stone-700 bg-stone-900 text-stone-300">

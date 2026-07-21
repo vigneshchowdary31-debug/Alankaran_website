@@ -45,29 +45,28 @@ export function ImagePreview({
   return (
     <div
       className={cn(
-        "bg-black/40 border border-gold/30 rounded-2xl overflow-hidden shadow-xl shadow-gold/5 flex flex-col transition-all select-none",
+        "bg-black/40 border border-stone-800/70 rounded-2xl overflow-hidden flex flex-col transition-all duration-150 select-none",
         className
       )}
     >
-      {/* Thumbnail Header Area */}
-      <div className="relative w-full aspect-[16/10] bg-stone-950 flex items-center justify-center overflow-hidden border-b border-stone-800">
-        {/* Shimmer loading placeholder while image loads */}
+      {/* Image — the prominent element (~16:10, ~70% of the card). */}
+      <div className="relative w-full aspect-[16/10] bg-stone-950 flex items-center justify-center overflow-hidden group/preview">
         {!imageLoaded && !imageError && (
-          <div className="absolute inset-0 bg-stone-900 animate-pulse flex items-center justify-center text-stone-600 text-xs font-sans">
-            Loading preview from CDN...
+          <div className="absolute inset-0 bg-stone-900 animate-pulse flex items-center justify-center text-white/40 text-xs">
+            Loading…
           </div>
         )}
 
         {imageError ? (
-          <div className="text-stone-500 font-sans text-xs flex flex-col items-center justify-center p-4 text-center">
-            <span>Thumbnail temporarily unavailable</span>
+          <div className="text-white/50 text-xs flex flex-col items-center justify-center p-4 text-center">
+            <span>Preview unavailable</span>
             <a
               href={asset.url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gold underline mt-1 flex items-center gap-1"
             >
-              <span>View Direct URL</span>
+              <span>Open image</span>
               <ExternalLink className="size-3" />
             </a>
           </div>
@@ -78,62 +77,49 @@ export function ImagePreview({
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             className={cn(
-              "w-full h-full object-cover transition-opacity duration-300",
+              "w-full h-full object-cover transition-all duration-300 group-hover/preview:scale-[1.02]",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
           />
         )}
 
-        {/* Top Status Badge */}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-emerald-500/40 text-[10px] font-mono text-emerald-400">
-          <CheckCircle2 className="size-3 text-emerald-400" />
-          <span>Cloudinary CDN Active</span>
+        {/* Corner status pill — image is stored and ready. */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-emerald-500/40 text-[11px] font-medium text-emerald-400">
+          <CheckCircle2 className="size-3" />
+          <span>Uploaded</span>
         </div>
 
-        {/* Direct Link Open Button */}
+        {/* Open full-resolution — appears on hover. */}
         <a
           href={asset.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute top-3 right-3 p-2 rounded-full bg-black/70 hover:bg-black text-stone-300 hover:text-gold transition-colors border border-stone-700/80 backdrop-blur-md focus:outline-none"
-          title="Open full resolution image on Cloudinary CDN"
-          aria-label="Open full resolution image"
+          className="absolute top-3 right-3 p-2 rounded-full bg-black/70 hover:bg-black text-white/70 hover:text-gold transition-all duration-150 border border-stone-700/80 backdrop-blur-md opacity-0 group-hover/preview:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+          title="Open full-size image"
+          aria-label="Open full-size image"
         >
           <Maximize2 className="size-3.5" />
         </a>
       </div>
 
-      {/* Asset Metadata Footer */}
-      <div className="p-5 flex flex-col justify-between flex-1 gap-4">
-        <div>
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <h4 className="font-sans text-xs font-semibold text-stone-100 truncate" title={asset.altText}>
-              {asset.altText || asset.slotName}
-            </h4>
-            <span className="font-mono text-[10px] text-gold shrink-0 bg-gold/10 px-2 py-0.5 rounded border border-gold/20">
-              {formattedSize}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] font-mono text-stone-400 pt-2 border-t border-stone-800/80">
-            <span>ID: {asset.cloudinaryId ? asset.cloudinaryId.split("/").pop() : asset.id}</span>
-            {asset.width && asset.height && (
-              <span>
-                {asset.width} × {asset.height} px
-              </span>
-            )}
-          </div>
+      {/* Compact metadata — dimensions + size, no developer IDs. */}
+      <div className="p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2 text-[13px]">
+          <span className="text-white/70">
+            {asset.width && asset.height ? `${asset.width} × ${asset.height}` : "Image"}
+          </span>
+          <span className="text-white/45">{formattedSize}</span>
         </div>
 
-        {/* Action Buttons: Replace & Delete */}
-        <div className="flex items-center gap-3 pt-2">
+        {/* One action row: Replace (secondary) · Remove (danger). */}
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onReplaceClick}
             disabled={disabled}
-            className="flex-1 h-9 gap-2 font-sans text-xs bg-stone-900/80 border-stone-700 hover:border-gold/40 text-stone-200 hover:text-gold"
+            className="flex-1 h-9 gap-2 text-xs bg-stone-900/60 border-stone-700 hover:border-gold/40 text-white/90 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60"
           >
             <RefreshCw className="size-3.5" />
             <span>Replace</span>
@@ -145,9 +131,9 @@ export function ImagePreview({
             size="sm"
             onClick={onRemoveClick}
             disabled={disabled}
-            className="h-9 px-3 gap-1.5 font-sans text-xs bg-red-950/20 border-red-900/40 text-red-400 hover:text-red-300 hover:bg-red-950/40"
-            title="Delete image asset"
-            aria-label="Remove image from storage"
+            className="h-9 px-3 gap-1.5 text-xs bg-red-950/20 border-red-900/40 text-red-400 hover:text-red-300 hover:bg-red-950/40 focus-visible:ring-2 focus-visible:ring-red-500/50"
+            title="Remove image"
+            aria-label="Remove image"
           >
             <Trash2 className="size-3.5" />
             <span>Remove</span>

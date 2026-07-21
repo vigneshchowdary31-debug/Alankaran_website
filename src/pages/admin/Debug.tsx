@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
-  ShieldCheck,
   Activity,
   Database,
   Cloud,
@@ -10,12 +9,9 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
-  XCircle,
   ArrowLeft,
-  Cpu,
-  Server,
-  Globe,
   Terminal,
+  ChevronDown,
   Layers,
 } from "lucide-react";
 import {
@@ -28,6 +24,8 @@ import {
   Alert,
   AdminBreadcrumb,
   Button,
+  StatusBadge,
+  type StatusTone,
 } from "@/components/admin/ui";
 import { cmsHealthService, cmsCacheService, cmsService, slotCoverageService } from "@/domains/cms/services";
 import type { CMSHealthReport, CMSSectionContent } from "@/domains/cms/types";
@@ -61,6 +59,10 @@ export function AdminDebug() {
     published: TOTAL_GLOBAL_SETTINGS,
     total: TOTAL_GLOBAL_SETTINGS,
   });
+  // Developer telemetry is collapsed by default so the client-facing health summary leads.
+  const [showTelemetry, setShowTelemetry] = useState(false);
+  const [showOrphaned, setShowOrphaned] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const runDiagnostics = async () => {
     try {
@@ -147,182 +149,88 @@ export function AdminDebug() {
         ]}
       />
 
-      {/* Page Header */}
-      <PageHeader
-        badge="Phase 3.5 Enterprise Diagnostics & Observability"
-        title="CMS System Diagnostics & Health Dashboard"
-        description="Full telemetry, subsystem verification, multi-tier cache diagnostics (`Task 6 & 7`), and atomic recovery actions for administrative verification."
-      >
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loading}
-            onClick={runDiagnostics}
-            className="gap-2 text-xs font-sans border-stone-700 text-stone-300 hover:text-gold"
-          >
-            <RefreshCw className={`size-3.5 ${loading ? "animate-spin text-gold" : ""}`} />
-            <span>Refresh Diagnostics</span>
-          </Button>
-
-          <Link href={ROUTES.ADMIN.DASHBOARD}>
-            <Button variant="outline" size="sm" className="gap-2 text-xs font-sans">
-              <ArrowLeft className="size-3.5" />
-              <span>Back to Dashboard</span>
-            </Button>
-          </Link>
-        </div>
-      </PageHeader>
+      <PageHeader title="Diagnostics" description="Check that your website is connected and healthy." />
 
       {/* Recovery / Action Feedback Banner */}
       {recoveryMsg && (
-        <Alert className="bg-emerald-950/60 border-emerald-800/80 p-4 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+        <Alert className="bg-emerald-950/60 border-emerald-800/80 p-4 rounded-xl text-emerald-300 text-[13px] flex items-center gap-2">
           <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
           <span>{recoveryMsg}</span>
         </Alert>
       )}
 
-      {/* Health Score Overview Banner */}
-      <Card className="bg-black/40 border-stone-800/80 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className={`size-16 rounded-2xl border flex flex-col items-center justify-center shrink-0 shadow-inner ${scoreColor}`}>
-              <span className="font-mono text-2xl font-bold leading-none">{report?.score || 0}</span>
-              <span className="text-[9px] font-mono uppercase tracking-widest opacity-80 mt-1">Score</span>
+      {/* Compact health summary + action toolbar */}
+      <Card className="bg-gradient-to-br from-black/50 to-stone-950/30 border border-stone-800/70 p-5 rounded-2xl shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className={`size-14 rounded-2xl border flex items-center justify-center shrink-0 shadow-inner ${scoreColor}`}>
+              <span className="font-serif text-2xl font-semibold leading-none">{report?.score ?? 0}</span>
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="font-serif text-2xl text-stone-100 font-normal">
-                  Overall CMS Subsystem Status:{" "}
-                  <span className={report?.status === "healthy" ? "text-emerald-400" : "text-amber-400"}>
-                    {(report?.status || "Checking").toUpperCase()}
-                  </span>
-                </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-wider font-semibold bg-stone-800 text-stone-300 border border-stone-700">
-                  {APP_CONFIG.CMS_VERSION}
-                </span>
+                <h2 className="font-serif text-xl text-white/90">CMS Diagnostics</h2>
+                <StatusBadge
+                  tone={report?.status === "healthy" ? "connected" : report?.status === "degraded" ? "draft" : report ? "offline" : "neutral"}
+                  dot
+                >
+                  {report?.status === "healthy" ? "Healthy" : report?.status === "degraded" ? "Degraded" : report ? "Critical" : "Checking"}
+                </StatusBadge>
               </div>
-              <p className="font-sans text-xs text-stone-400 font-light mt-1 max-w-2xl leading-relaxed">
-                All core persistence, storage CDN, and authentication subsystems have been checked against Phase 3.5 enterprise constraints.
+              <p className="text-[13px] text-white/55 mt-1">
+                {report?.score ?? 0}/100
+                {report?.timestamp ? ` · Last checked ${new Date(report.timestamp).toLocaleTimeString()}` : " · Checking subsystems…"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-stone-800/80 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleTestRecovery}
-              disabled={testingRecovery}
-              className="gap-2 text-xs border-gold/40 text-gold hover:bg-gold/10"
-            >
-              <Activity className="size-3.5" />
-              <span>{testingRecovery ? "Testing Recovery..." : "Test Reconnect & Recovery"}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" disabled={loading} onClick={runDiagnostics}
+              className="gap-2 text-xs border-stone-700 text-white/70 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60">
+              <RefreshCw className={`size-3.5 ${loading ? "animate-spin text-gold" : ""}`} /><span>Refresh</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClearCache}
-              className="gap-2 text-xs border-stone-700 text-stone-300 hover:text-rose-400 hover:border-rose-800"
-            >
-              <Trash2 className="size-3.5 text-rose-400" />
-              <span>Clear Cache Tier</span>
+            <Button variant="outline" size="sm" onClick={handleTestRecovery} disabled={testingRecovery}
+              className="gap-2 text-xs border-gold/40 text-gold hover:bg-gold/10 focus-visible:ring-2 focus-visible:ring-gold/60">
+              <Activity className="size-3.5" /><span>{testingRecovery ? "Testing…" : "Test Reconnect"}</span>
             </Button>
+            <Button variant="outline" size="sm" onClick={handleClearCache}
+              className="gap-2 text-xs border-stone-700 text-white/70 hover:text-rose-400 hover:border-rose-800 focus-visible:ring-2 focus-visible:ring-rose-500/40">
+              <Trash2 className="size-3.5 text-rose-400" /><span>Clear Cache</span>
+            </Button>
+            <Link href={ROUTES.ADMIN.DASHBOARD}>
+              <Button variant="outline" size="sm" className="gap-2 text-xs focus-visible:ring-2 focus-visible:ring-gold/60">
+                <ArrowLeft className="size-3.5" /><span>Back</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </Card>
 
-      {/* Subsystem Health Checks Grid (`Task 7 & 8`) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Firestore Check */}
-        <Card className="bg-stone-900/40 border-stone-800 rounded-2xl p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="size-8 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center text-gold">
-                  <Database className="size-4" />
-                </div>
-                <span className="font-serif text-base text-stone-200">Firestore NoSQL</span>
-              </div>
-              {report?.checks.firestore.reachable ? (
-                <span className="text-[10px] font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <CheckCircle2 className="size-3" /> Operational
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono bg-rose-950/80 text-rose-400 border border-rose-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <XCircle className="size-3" /> Offline
-                </span>
-              )}
-            </div>
-            <p className="font-sans text-xs text-stone-400 leading-relaxed">
-              {report?.checks.firestore.message || "Checking database reachability..."}
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-stone-800/60 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-            <span>Collection: cmsSiteContent</span>
-            <span>Latency: {report?.checks.firestore.latencyMs || 0} ms</span>
-          </div>
-        </Card>
-
-        {/* Cloudinary CDN Check */}
-        <Card className="bg-stone-900/40 border-stone-800 rounded-2xl p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="size-8 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center text-gold">
-                  <Cloud className="size-4" />
-                </div>
-                <span className="font-serif text-base text-stone-200">Cloudinary CDN Storage</span>
-              </div>
-              {report?.checks.cloudinary.configured ? (
-                <span className="text-[10px] font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <CheckCircle2 className="size-3" /> Configured
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono bg-amber-950/80 text-amber-400 border border-amber-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <AlertTriangle className="size-3" /> Warning
-                </span>
-              )}
-            </div>
-            <p className="font-sans text-xs text-stone-400 leading-relaxed">
-              {report?.checks.cloudinary.message || "Checking CDN configuration..."}
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-stone-800/60 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-            <span>Provider: StorageInterface</span>
-            <span>Unsigned Uploads: Yes</span>
-          </div>
-        </Card>
-
-        {/* Authentication Check */}
-        <Card className="bg-stone-900/40 border-stone-800 rounded-2xl p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="size-8 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center text-gold">
-                  <Lock className="size-4" />
-                </div>
-                <span className="font-serif text-base text-stone-200">Session Security</span>
-              </div>
-              {report?.checks.authentication.valid ? (
-                <span className="text-[10px] font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <CheckCircle2 className="size-3" /> Verified
-                </span>
-              ) : (
-                <span className="text-[10px] font-mono bg-rose-950/80 text-rose-400 border border-rose-800/80 px-2 py-0.5 rounded flex items-center gap-1">
-                  <XCircle className="size-3" /> Unverified
-                </span>
-              )}
-            </div>
-            <p className="font-sans text-xs text-stone-400 leading-relaxed">
-              {report?.checks.authentication.message || "Checking active session..."}
-            </p>
-          </div>
-          <div className="mt-4 pt-3 border-t border-stone-800/60 text-[11px] font-mono text-stone-500 flex items-center justify-between truncate">
-            <span className="truncate">User: {currentUser?.email || "None"}</span>
-            <span>TLS Protected</span>
-          </div>
-        </Card>
+      {/* Subsystem health cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <SubsystemCard
+          icon={Database}
+          title="Database"
+          tone={report?.checks.firestore.reachable ? "connected" : "offline"}
+          status={report?.checks.firestore.reachable ? "Operational" : "Offline"}
+          metric={`${report?.checks.firestore.latencyMs ?? 0} ms`}
+          caption="Response time"
+        />
+        <SubsystemCard
+          icon={Cloud}
+          title="Image Storage"
+          tone={report?.checks.cloudinary.configured ? "connected" : "draft"}
+          status={report?.checks.cloudinary.configured ? "Configured" : "Setup needed"}
+          metric={report?.checks.cloudinary.configured ? "Ready" : "—"}
+          caption="Cloudinary CDN"
+        />
+        <SubsystemCard
+          icon={Lock}
+          title="Authentication"
+          tone={report?.checks.authentication.valid ? "connected" : "offline"}
+          status={report?.checks.authentication.valid ? "Verified" : "Signed out"}
+          metric={currentUser?.email || "No session"}
+          caption="Secure session"
+        />
       </div>
 
       {/* CMS Slot Coverage */}
@@ -330,44 +238,31 @@ export function AdminDebug() {
         <CardHeader className="p-0 mb-6 border-b border-stone-800/80 pb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <CardTitle className="font-serif text-xl text-stone-100 font-normal flex items-center gap-2.5">
-                <Layers className="size-5 text-gold" /> CMS Content Coverage
+              <CardTitle className="font-serif text-xl text-white/90 font-normal flex items-center gap-2.5">
+                <Layers className="size-5 text-gold" /> Content Coverage
               </CardTitle>
-              <CardDescription className="text-xs font-sans text-stone-400 mt-1 font-light">
-                The website's slot catalog compared against what Firestore actually holds. "Configured"
-                means the public site renders your uploaded image rather than a bundled fallback.
+              <CardDescription className="text-[13px] text-white/55 mt-1">
+                Which images are published from the CMS versus using a bundled fallback.
               </CardDescription>
             </div>
+
+            {/* Compact stat chips */}
             {coverage && (
-              <div
-                className={`px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold ${
-                  coverage.imageCoverage === 100
-                    ? "text-emerald-400 border-emerald-800/80 bg-emerald-950/40"
-                    : coverage.imageCoverage >= 50
-                    ? "text-amber-400 border-amber-800/80 bg-amber-950/40"
-                    : "text-rose-400 border-rose-800/80 bg-rose-950/40"
-                }`}
-              >
-                Images {coverage.totalConfigured} / {coverage.totalExpected} ({coverage.imageCoverage}%)
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`px-3 py-1.5 rounded-xl border text-[13px] ${coverage.imageCoverage === 100 ? "border-emerald-800/60 bg-emerald-950/25 text-emerald-300" : "border-stone-800 bg-stone-900/50 text-white/80"}`}>
+                  <strong className={coverage.imageCoverage === 100 ? "" : "text-white/90"}>{coverage.totalConfigured}/{coverage.totalExpected}</strong> Images
+                </span>
+                <span className="px-3 py-1.5 rounded-xl border border-stone-800 bg-stone-900/50 text-[13px] text-white/80">
+                  <strong className="text-white/90">{coverage.galleryItemCount}</strong> Gallery
+                </span>
+                <span className={`px-3 py-1.5 rounded-xl border text-[13px] ${coverage.missingSlots.length ? "border-amber-800/70 bg-amber-950/30 text-amber-300" : "border-stone-800 bg-stone-900/50 text-white/80"}`}>
+                  <strong>{coverage.missingSlots.length}</strong> Missing
+                </span>
+                <span className="px-3 py-1.5 rounded-xl border border-stone-800 bg-stone-900/50 text-[13px] text-white/80" title="Configured / published site-wide text settings">
+                  <strong className="text-white/90">{globalSettings.published}/{globalSettings.total}</strong> Settings
+                </span>
               </div>
             )}
-
-            {/* Global website settings — only the settings the site actually renders are counted. */}
-            <div
-              className={`px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold ${
-                globalSettings.published === TOTAL_GLOBAL_SETTINGS
-                  ? "text-emerald-400 border-emerald-800/80 bg-emerald-950/40"
-                  : globalSettings.draft > 0
-                    ? "text-amber-400 border-amber-800/80 bg-amber-950/40"
-                    : "text-rose-400 border-rose-800/80 bg-rose-950/40"
-              }`}
-              title="Configured = filled in the draft · Published = live on the website"
-            >
-              Global Settings {globalSettings.published} / {globalSettings.total} published
-              <span className="ml-2 font-normal opacity-80">
-                ({globalSettings.configured} configured{globalSettings.draft > 0 ? `, ${globalSettings.draft} draft` : ""})
-              </span>
-            </div>
           </div>
         </CardHeader>
 
@@ -376,179 +271,210 @@ export function AdminDebug() {
             <p className="font-mono text-xs text-stone-500">Calculating coverage…</p>
           ) : (
             <>
-              {/* Per-section coverage */}
-              <div className="space-y-2.5">
+              {/* Per-section coverage rows */}
+              <div className="space-y-1.5">
                 {coverage.sections.map((s) => (
                   <div
                     key={s.sectionKey}
-                    className="flex items-center justify-between gap-4 py-2.5 border-b border-stone-800/50"
+                    className="flex items-center gap-4 py-2.5 px-1 rounded-lg hover:bg-white/[0.02] transition-colors duration-150"
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-stone-200">{s.sectionKey}</span>
-                        {s.isDynamic && (
-                          <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-700">
-                            dynamic
-                          </span>
-                        )}
-                      </div>
-                      {s.missing.length > 0 && (
-                        <p className="font-mono text-[11px] text-amber-500/80 mt-1 truncate">
-                          Missing: {s.missing.join(", ")}
-                        </p>
+                    <div className="w-32 shrink-0 flex items-center gap-2">
+                      <span className="text-[14px] text-white/80 capitalize">{s.sectionKey}</span>
+                      {s.isDynamic && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-white/50 border border-stone-700">dynamic</span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-32 h-1.5 rounded-full bg-stone-800 overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            s.coverage === 100 ? "bg-emerald-500" : s.coverage >= 50 ? "bg-amber-500" : "bg-rose-500"
-                          }`}
-                          style={{ width: `${s.coverage}%` }}
-                        />
-                      </div>
-                      <span className="font-mono text-[11px] text-stone-400 w-24 text-right">
-                        {s.isDynamic
-                          ? `${s.itemCount ?? 0} image${(s.itemCount ?? 0) === 1 ? "" : "s"}`
-                          : `${s.configured} / ${s.expected}`}
-                      </span>
+                    <StatusBadge tone={s.coverage === 100 ? "connected" : s.coverage >= 50 ? "draft" : "offline"}>
+                      {s.coverage === 100 ? "Healthy" : s.coverage >= 50 ? "Partial" : "Low"}
+                    </StatusBadge>
+
+                    <div className="flex-1 h-1.5 rounded-full bg-stone-800 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          s.coverage === 100 ? "bg-emerald-500" : s.coverage >= 50 ? "bg-amber-500" : "bg-rose-500"
+                        }`}
+                        style={{ width: `${s.coverage}%` }}
+                      />
                     </div>
+
+                    <span className="text-[13px] text-white/70 w-20 text-right tabular-nums">
+                      {s.isDynamic
+                        ? `${s.itemCount ?? 0} image${(s.itemCount ?? 0) === 1 ? "" : "s"}`
+                        : `${s.configured} / ${s.expected}`}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              {/* Coverage totals */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                <div className="p-3 rounded-xl border border-stone-800 bg-stone-900/40">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-stone-500">Images</p>
-                  <p className="font-mono text-lg text-stone-100 mt-1">
-                    {coverage.totalConfigured} / {coverage.totalExpected}
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl border border-stone-800 bg-stone-900/40">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-stone-500">Gallery</p>
-                  <p className="font-mono text-lg text-stone-100 mt-1">{coverage.galleryItemCount} live</p>
-                </div>
-                <div className="p-3 rounded-xl border border-stone-800 bg-stone-900/40">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-stone-500">Missing</p>
-                  <p className={`font-mono text-lg mt-1 ${coverage.missingSlots.length ? "text-amber-400" : "text-emerald-400"}`}>
-                    {coverage.missingSlots.length}
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl border border-stone-800 bg-stone-900/40">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-stone-500">Text slots</p>
-                  <p className="font-mono text-lg text-stone-500 mt-1">0 / 0</p>
-                </div>
-              </div>
-
-              {/* Orphaned + duplicate reporting */}
+              {/* Legacy slots — collapsible */}
               {coverage.orphanedSlots.length > 0 && (
-                <Alert className="bg-amber-950/40 border-amber-800/80 p-4 rounded-xl">
-                  <p className="text-xs font-sans text-amber-300 font-medium mb-1">
-                    {coverage.orphanedSlots.length} orphaned slot record(s) in Firestore
-                  </p>
-                  <p className="text-[11px] font-mono text-amber-200/70 leading-relaxed">
-                    {coverage.orphanedSlots.join(", ")}
-                  </p>
-                  <p className="text-[11px] font-sans text-amber-200/60 mt-1.5">
-                    These exist in the database but no page renders them and no editor manages them —
-                    usually left over from a renamed slot.
-                  </p>
-                </Alert>
+                <div className="rounded-xl border border-amber-900/50 bg-amber-950/20 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowOrphaned((v) => !v)}
+                    aria-expanded={showOrphaned}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+                  >
+                    <span className="flex items-center gap-2 text-[13px] text-amber-300">
+                      <AlertTriangle className="size-4 shrink-0" />
+                      <strong className="font-medium">Legacy Slots</strong>
+                      <span className="text-amber-200/70">— {coverage.orphanedSlots.length} orphaned record{coverage.orphanedSlots.length === 1 ? "" : "s"}</span>
+                    </span>
+                    <ChevronDown className={`size-4 text-amber-300/70 shrink-0 transition-transform duration-150 ${showOrphaned ? "rotate-180" : ""}`} />
+                  </button>
+                  {showOrphaned && (
+                    <div className="px-4 pb-3 text-[12px] text-amber-200/70">
+                      <p className="font-mono break-words leading-relaxed">{coverage.orphanedSlots.join(", ")}</p>
+                      <p className="mt-1.5 text-amber-200/55">Left over from a renamed slot — no page renders these and no editor manages them.</p>
+                    </div>
+                  )}
+                </div>
               )}
 
+              {/* Duplicate images — collapsible, grouped cards */}
               {coverage.duplicateAssets.length > 0 && (
-                <Alert className="bg-stone-900/60 border-stone-700 p-4 rounded-xl">
-                  <p className="text-xs font-sans text-stone-300 font-medium mb-1">
-                    {coverage.duplicateAssets.length} image(s) reused across multiple slots
-                  </p>
-                  <div className="space-y-1 mt-1.5">
-                    {coverage.duplicateAssets.slice(0, 5).map((d) => (
-                      <p key={d.cloudinaryId} className="text-[11px] font-mono text-stone-400 truncate">
-                        {d.cloudinaryId} → {d.slots.join(", ")}
-                      </p>
-                    ))}
-                  </div>
-                  <p className="text-[11px] font-sans text-stone-500 mt-1.5">
-                    Replacing one of these changes every slot listed beside it.
-                  </p>
-                </Alert>
+                <div className="rounded-xl border border-stone-700/60 bg-stone-900/40 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowDuplicates((v) => !v)}
+                    aria-expanded={showDuplicates}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-white/[0.03] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+                  >
+                    <span className="flex items-center gap-2 text-[13px] text-white/80">
+                      <Layers className="size-4 text-gold shrink-0" />
+                      <strong className="font-medium">Duplicate Images</strong>
+                      <span className="text-white/55">— {coverage.duplicateAssets.length} reused asset{coverage.duplicateAssets.length === 1 ? "" : "s"}</span>
+                    </span>
+                    <ChevronDown className={`size-4 text-white/50 shrink-0 transition-transform duration-150 ${showDuplicates ? "rotate-180" : ""}`} />
+                  </button>
+                  {showDuplicates && (
+                    <div className="px-4 pb-3 space-y-1.5">
+                      {coverage.duplicateAssets.slice(0, 5).map((d) => (
+                        <div key={d.cloudinaryId} className="px-3 py-2 rounded-lg border border-stone-800 bg-black/30 text-[12px]">
+                          <p className="font-mono text-white/70 truncate">{d.cloudinaryId}</p>
+                          <p className="text-white/45 truncate">→ {d.slots.join(", ")}</p>
+                        </div>
+                      ))}
+                      <p className="text-[12px] text-white/45 pt-1">Replacing one of these changes every slot listed beside it.</p>
+                    </div>
+                  )}
+                </div>
               )}
 
               {coverage.missingSlots.length === 0 && coverage.orphanedSlots.length === 0 && (
-                <Alert className="bg-emerald-950/40 border-emerald-800/80 p-4 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
-                  <span>
-                    Every named slot on the public website is published from the CMS. No fallbacks, no
-                    orphaned records.
-                  </span>
-                </Alert>
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-emerald-900/50 bg-emerald-950/20 text-[13px] text-emerald-300">
+                  <CheckCircle2 className="size-4 shrink-0" />
+                  <span>Everything looks good. No issues detected.</span>
+                </div>
               )}
             </>
           )}
         </CardContent>
       </Card>
 
-      {/* Detailed Diagnostics Table & Cache Status (`Task 6 & 7`) */}
-      <Card className="bg-black/30 border-stone-800/80 rounded-2xl p-6 shadow-xl">
-        <CardHeader className="p-0 mb-6 border-b border-stone-800/80 pb-4">
-          <CardTitle className="font-serif text-xl text-stone-100 font-normal flex items-center gap-2.5">
-            <Terminal className="size-5 text-gold" /> System Telemetry & Environment Audit Table
-          </CardTitle>
-          <CardDescription className="text-xs font-sans text-stone-400 mt-1 font-light">
-            Exact runtime inspection parameters, memory cache entries, and browser environment profiles.
-          </CardDescription>
-        </CardHeader>
+      {/* System information — developer telemetry, collapsed by default */}
+      <Card className="bg-black/30 border border-stone-800/70 rounded-2xl shadow-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowTelemetry((v) => !v)}
+          aria-expanded={showTelemetry}
+          className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-white/[0.02] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+        >
+          <div className="flex items-center gap-2.5">
+            <Terminal className="size-4 text-gold" />
+            <span className="font-serif text-base text-white/90">System Information</span>
+            <StatusBadge tone="neutral">{import.meta.env.MODE}</StatusBadge>
+          </div>
+          <ChevronDown className={`size-5 text-white/50 transition-transform duration-150 ${showTelemetry ? "rotate-180" : ""}`} />
+        </button>
 
-        <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 font-mono text-xs">
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Current Environment:</span>
-            <span className="text-emerald-400 font-semibold uppercase">{import.meta.env.MODE}</span>
+        {showTelemetry && (
+        <CardContent className="p-6 pt-0 grid grid-cols-1 md:grid-cols-2 gap-3 text-[13px]">
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Environment</p>
+            <p className="text-emerald-400 font-medium mt-0.5">{import.meta.env.MODE}</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">CMS System Version:</span>
-            <span className="text-gold font-semibold">{APP_CONFIG.CMS_VERSION}</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">CMS Version</p>
+            <p className="text-gold font-medium mt-0.5">{APP_CONFIG.CMS_VERSION}</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Firebase Project ID:</span>
-            <span className="text-stone-200 truncate max-w-[200px]">{import.meta.env.VITE_FIREBASE_PROJECT_ID || "alankaran-website"}</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Firebase Project</p>
+            <p className="text-white/80 mt-0.5 truncate">{import.meta.env.VITE_FIREBASE_PROJECT_ID || "alankaran-website"}</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Cloudinary Cloud Name:</span>
-            <span className="text-stone-200 truncate max-w-[200px]">{import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "Demo Mode"}</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Cloudinary Cloud</p>
+            <p className="text-white/80 mt-0.5 truncate">{import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "Demo Mode"}</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Cache Level 1 (Memory):</span>
-            <span className="text-stone-200 font-semibold">{cacheStats.memoryEntries} entries</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Memory Cache</p>
+            <p className="text-white/80 font-medium mt-0.5">{cacheStats.memoryEntries} entries</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Cache Level 2 (localStorage):</span>
-            <span className="text-stone-200 font-semibold">{cacheStats.localStorageEntries} persisted entries</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Persistent Cache</p>
+            <p className="text-white/80 font-medium mt-0.5">{cacheStats.localStorageEntries} entries</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Real-Time Snapshot Sync (`onSnapshot`):</span>
-            <span className="text-emerald-400 font-semibold">Active & Multi-Tab Operational</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Realtime Sync</p>
+            <p className="text-emerald-400 font-medium mt-0.5">Operational</p>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-b border-stone-800/50">
-            <span className="text-stone-400">Public Website Isolation:</span>
-            <span className="text-gold font-semibold">100% Isolated & Untouched</span>
+          <div className="px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40">
+            <p className="text-white/45">Website Isolation</p>
+            <p className="text-gold font-medium mt-0.5">Fully isolated</p>
           </div>
 
-          <div className="col-span-1 md:col-span-2 pt-2 text-[11px] text-stone-500 font-sans truncate">
-            Browser Information: <span className="font-mono text-stone-400">{typeof navigator !== "undefined" ? navigator.userAgent : "SSR Environment"}</span>
+          <div className="col-span-1 md:col-span-2 px-3.5 py-2.5 rounded-xl border border-stone-800/70 bg-stone-900/40 text-[12px] text-white/45 truncate">
+            Browser: <span className="font-mono text-white/55">{typeof navigator !== "undefined" ? navigator.userAgent : "SSR Environment"}</span>
           </div>
         </CardContent>
+        )}
       </Card>
     </div>
   );
 }
 
 export default AdminDebug;
+
+/**
+ * A premium subsystem status card. Presentation only — the caller passes the tone/status/metric
+ * derived from the diagnostics report, so no health logic lives here.
+ */
+function SubsystemCard({
+  icon: Icon,
+  title,
+  tone,
+  status,
+  metric,
+  caption,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  tone: StatusTone;
+  status: string;
+  metric: string;
+  caption: string;
+}) {
+  return (
+    <div className="bg-black/30 border border-stone-800/70 rounded-2xl p-5 flex flex-col gap-3 shadow-lg transition-all duration-150 hover:border-gold/30 hover:-translate-y-0.5">
+      <div className="flex items-center justify-between">
+        <span className="size-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-gold">
+          <Icon className="size-4" />
+        </span>
+        <StatusBadge tone={tone} dot>{status}</StatusBadge>
+      </div>
+      <div>
+        <h3 className="font-serif text-base text-white/90">{title}</h3>
+        <p className="text-xl font-serif text-white/90 mt-1 leading-none truncate" title={metric}>{metric}</p>
+      </div>
+      <p className="text-[13px] text-white/45">{caption}</p>
+    </div>
+  );
+}

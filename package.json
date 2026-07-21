@@ -15,7 +15,11 @@
     "bootstrap-gallery": "node scripts/bootstrap-gallery.ts",
     "bootstrap-gallery:dry": "node scripts/bootstrap-gallery.ts --dry-run",
     "bootstrap-wedding-stories": "node scripts/bootstrap-wedding-stories.ts",
-    "bootstrap-wedding-stories:dry": "node scripts/bootstrap-wedding-stories.ts --dry-run"
+    "bootstrap-wedding-stories:dry": "node scripts/bootstrap-wedding-stories.ts --dry-run",
+    "backfill-named-images": "node scripts/backfill-named-images.ts",
+    "backfill-named-images:dry": "node scripts/backfill-named-images.ts --dry-run",
+    "remove-orphaned-slots": "node scripts/remove-orphaned-slots.ts",
+    "remove-orphaned-slots:dry": "node scripts/remove-orphaned-slots.ts --dry-run"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -31,6 +31,7 @@ import { GalleryMetadataModal } from "./GalleryMetadataModal";
 import { GalleryPreviewModal } from "./GalleryPreviewModal";
 import { TrashModal } from "../TrashModal";
 import { cmsService } from "@/domains/cms/services/cms.service";
+import { selectGalleryDraftSlots } from "@/domains/cms/utils/galleryResolver";
 import { showSuccess, showError } from "@/utils/toast";
 import { useUndoStack } from "@/hooks/useUndoStack";
 import { useAuth } from "@/context/AuthContext";
@@ -106,7 +107,7 @@ export function GalleryManager() {
 
   const allSlots = useMemo<GallerySlotRow[]>(() => {
     if (!section) return [];
-    const drafts = (section as any).draftSlots || section.slots || {};
+    const drafts = selectGalleryDraftSlots(section);
     const published = (section as any).publishedSlots || {};
     return Object.values(drafts).map((slot: any) => ({
       ...(slot as CMSSlotMetadata),
@@ -403,33 +404,33 @@ export function GalleryManager() {
         </div>
       </div>
 
-      {/* Search & Filters (Task 5 mobile: scrollable pills) */}
-      <div className="bg-black/30 border border-gold/15 p-4 rounded-2xl">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <div className="relative w-full md:w-80">
-            <Search className="size-4 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+      {/* Search & Filters — pinned while scrolling so search stays reachable. */}
+      <div className="sticky top-2 z-30 bg-stone-950/85 border border-stone-800/80 p-4 rounded-2xl backdrop-blur-md">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="relative w-full md:w-[460px]">
+            <Search className="size-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
             <Input
               type="search"
-              placeholder="Search name, caption, tag, category..."
+              placeholder="Search by name, caption, tag, or category…"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              className="pl-9 bg-black/60 border-stone-800 text-xs text-stone-200 h-9 rounded-xl focus:border-gold"
+              className="pl-10 bg-black/50 border-stone-700 text-sm text-white/90 placeholder:text-white/40 h-10 rounded-xl focus:border-gold"
               aria-label="Search gallery images"
             />
           </div>
 
           {/* Category pills — horizontal scroll on mobile */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 md:flex-nowrap" role="group" aria-label="Category filter">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 md:flex-nowrap" role="group" aria-label="Category filter">
             {categoriesList.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => { setCategoryFilter(cat); setCurrentPage(1); }}
                 aria-pressed={categoryFilter === cat}
-                className={`px-3 py-1 rounded-full text-xs font-sans transition-all shrink-0 border ${
+                className={`px-4 py-1.5 rounded-full text-[13px] transition-all duration-150 shrink-0 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
                   categoryFilter === cat
                     ? "bg-gold text-nizami-dark font-semibold border-gold shadow"
-                    : "bg-stone-900/60 text-stone-300 border-stone-800 hover:border-gold/40"
+                    : "bg-stone-900/50 text-white/70 border-stone-800 hover:border-gold/40 hover:text-white/90"
                 }`}
               >
                 {cat}
@@ -525,8 +526,8 @@ export function GalleryManager() {
             return (
               <Card
                 key={slot.slotName}
-                className={`group relative overflow-hidden bg-stone-900/80 border rounded-2xl flex flex-col justify-between transition-all duration-300 shadow-xl ${
-                  isSelected ? "border-gold ring-1 ring-gold bg-gold/5" : "border-stone-800 hover:border-gold/40"
+                className={`group relative overflow-hidden bg-stone-900/70 border rounded-2xl flex flex-col justify-between transition-all duration-150 shadow-lg hover:-translate-y-0.5 hover:shadow-2xl ${
+                  isSelected ? "border-gold ring-1 ring-gold bg-gold/5" : "border-stone-800/80 hover:border-gold/40"
                 }`}
                 role="gridcell"
                 aria-selected={isSelected}
@@ -536,7 +537,7 @@ export function GalleryManager() {
                     src={slot.url}
                     alt={slot.altText || slot.slotName}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
 
                   {/* Selection checkbox (Task 6 — aria-label) */}
@@ -550,15 +551,15 @@ export function GalleryManager() {
                     {isSelected ? <CheckSquare className="size-4" aria-hidden="true" /> : <Square className="size-4 text-stone-400" aria-hidden="true" />}
                   </button>
 
-                  {/* Badges */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 z-10" aria-hidden="true">
-                    <span className="bg-black/80 backdrop-blur-md border border-gold/30 px-2 py-0.5 rounded text-[10px] font-mono text-gold flex items-center gap-1 shadow">
-                      <Layers className="size-2.5" /> #{slot.order || idx + 1}
-                    </span>
+                  {/* Order chip (quiet) + status pill (prominent, top-right) */}
+                  <span className="absolute bottom-3 right-3 z-10 bg-black/70 backdrop-blur-md border border-stone-700/70 px-2 py-0.5 rounded-md text-[11px] text-white/60 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150" aria-hidden="true">
+                    <Layers className="size-2.5" /> {slot.order || idx + 1}
+                  </span>
+                  <div className="absolute top-3 right-3 z-10" aria-hidden="true">
                     {slot._isPublished ? (
-                      <span className="bg-emerald-950/90 border border-emerald-800 text-emerald-400 px-1.5 py-0.5 rounded text-[9px] font-mono shadow">LIVE</span>
+                      <span className="bg-emerald-500/90 text-emerald-950 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-md">Live</span>
                     ) : (
-                      <span className="bg-amber-950/90 border border-amber-800 text-amber-400 px-1.5 py-0.5 rounded text-[9px] font-mono shadow">DRAFT</span>
+                      <span className="bg-amber-400/90 text-amber-950 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-md">Draft</span>
                     )}
                   </div>
 
@@ -589,45 +590,48 @@ export function GalleryManager() {
                   </div>
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-gold truncate">
-                        {slot.category || "Royal Weddings"}
-                      </span>
-                      <span className="text-[10px] font-mono text-stone-500" aria-hidden="true">{slot.width}×{slot.height}</span>
-                    </div>
-                    <h4 className="font-serif text-sm text-stone-100 truncate" title={slot.altText || slot.slotName}>
+                    <h4 className="text-[16px] font-semibold text-white/90 truncate leading-snug" title={slot.altText || slot.slotName}>
                       {slot.altText || slot.slotName}
                     </h4>
                     {slot.caption ? (
-                      <p className="font-sans text-xs text-stone-400 line-clamp-2 mt-1 font-light leading-relaxed">{slot.caption}</p>
+                      <p className="text-[14px] text-white/70 line-clamp-1 mt-0.5 leading-relaxed">{slot.caption}</p>
                     ) : (
-                      <p className="font-sans text-[11px] text-stone-600 italic mt-1">No caption set.</p>
+                      <p className="text-[14px] text-white/40 italic mt-0.5">No caption</p>
                     )}
+                    <div className="flex items-center gap-2 mt-1.5 text-[13px] text-white/50">
+                      <span className="text-gold/80 truncate">{slot.category || "Royal Weddings"}</span>
+                      {slot.width && slot.height && (
+                        <>
+                          <span className="text-white/25">·</span>
+                          <span aria-hidden="true">{slot.width}×{slot.height}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-stone-800/60 flex items-center justify-between gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setEditingSlot(slot)}
-                      className="flex-1 gap-1.5 border-stone-700 bg-black/40 text-stone-200 hover:border-gold text-[11px] h-8 focus:ring-1 focus:ring-gold"
-                      aria-label={`Edit metadata for ${slot.altText || slot.slotName}`}
+                      className="flex-1 gap-2 border-stone-700 bg-black/40 text-white/85 hover:border-gold hover:text-gold text-[13px] h-9 focus-visible:ring-2 focus-visible:ring-gold/60 transition-colors duration-150"
+                      aria-label={`Edit ${slot.altText || slot.slotName}`}
                     >
-                      <Edit3 className="size-3" aria-hidden="true" />
+                      <Edit3 className="size-3.5" aria-hidden="true" />
                       <span>Edit</span>
                     </Button>
 
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteSlot(slot)}
-                      className="px-2.5 border-stone-800 text-stone-400 hover:text-red-400 hover:border-red-900/60 h-8 shrink-0 focus:ring-1 focus:ring-red-700"
+                      className="size-9 p-0 shrink-0 text-white/40 hover:text-red-400 hover:bg-red-950/30 rounded-lg focus-visible:ring-2 focus-visible:ring-red-500/50 transition-colors duration-150"
                       aria-label={`Delete ${slot.altText || slot.slotName}`}
                       title="Move to Trash (can be undone)"
                     >
-                      <Trash2 className="size-3.5" aria-hidden="true" />
+                      <Trash2 className="size-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -752,28 +756,33 @@ export function GalleryManager() {
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination footer */}
       {!isLoading && !loadError && filteredSlots.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-stone-900/40 border border-stone-800 px-5 py-3 rounded-xl text-xs font-mono text-stone-400" role="navigation" aria-label="Gallery pagination">
-          <div className="flex items-center gap-2">
-            <span>Per page:</span>
-            <select value={pageSize} onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setCurrentPage(1); }} className="bg-black/60 border border-stone-700 rounded-lg px-2 py-1 text-stone-200 focus:border-gold outline-none" aria-label="Items per page">
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-              <option value={48}>48</option>
-            </select>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-stone-900/40 border border-stone-800/70 px-5 py-3 rounded-2xl text-[13px] text-white/60" role="navigation" aria-label="Gallery pagination">
+          <span aria-live="polite">
+            Showing{" "}
+            <strong className="text-white/90 font-medium">
+              {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredSlots.length)}
+            </strong>{" "}
+            of {filteredSlots.length}
+          </span>
 
-          <div className="flex items-center gap-4">
-            <span aria-live="polite">
-              Page <strong className="text-gold">{currentPage}</strong> / {totalPages} ({filteredSlots.length} total)
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-white/50">Per page</span>
+              <select value={pageSize} onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setCurrentPage(1); }} className="bg-black/50 border border-stone-700 rounded-lg px-2 py-1 text-white/85 focus:border-gold outline-none" aria-label="Items per page">
+                <option value={12}>12</option>
+                <option value={24}>24</option>
+                <option value={48}>48</option>
+              </select>
+            </div>
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="h-7 w-7 p-0 border-stone-700 bg-black/60 text-stone-300 disabled:opacity-30" aria-label="Previous page">
-                <ChevronLeft className="size-4" aria-hidden="true" />
+              <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="h-8 gap-1 px-3 border-stone-700 bg-black/50 text-white/80 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-gold/60" aria-label="Previous page">
+                <ChevronLeft className="size-4" aria-hidden="true" /> <span className="hidden sm:inline">Previous</span>
               </Button>
-              <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="h-7 w-7 p-0 border-stone-700 bg-black/60 text-stone-300 disabled:opacity-30" aria-label="Next page">
-                <ChevronRight className="size-4" aria-hidden="true" />
+              <span className="px-2 text-white/70">{currentPage} / {totalPages}</span>
+              <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="h-8 gap-1 px-3 border-stone-700 bg-black/50 text-white/80 disabled:opacity-30 focus-visible:ring-2 focus-visible:ring-gold/60" aria-label="Next page">
+                <span className="hidden sm:inline">Next</span> <ChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -783,7 +792,7 @@ export function GalleryManager() {
       {/* Modals */}
       <BulkUploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} sectionKey="gallery" existingSlotCount={allSlots.length} onUploadComplete={loadGallerySection} />
       <GalleryMetadataModal isOpen={Boolean(editingSlot)} onClose={() => setEditingSlot(null)} slot={editingSlot} onSave={() => { setEditingSlot(null); loadGallerySection(); }} />
-      <GalleryPreviewModal isOpen={previewModalOpen} onClose={() => setPreviewModalOpen(false)} slots={((section as any)?.draftSlots || section?.slots || {}) as Record<string, CMSSlotMetadata>} isPreviewingDraft={true} />
+      <GalleryPreviewModal isOpen={previewModalOpen} onClose={() => setPreviewModalOpen(false)} slots={selectGalleryDraftSlots(section)} isPreviewingDraft={true} />
       <TrashModal
         isOpen={trashModalOpen}
         onClose={() => { setTrashModalOpen(false); loadGallerySection(); }}

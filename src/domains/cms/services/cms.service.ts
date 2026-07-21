@@ -8,7 +8,7 @@ import type {
   SectionKey,
   CMSContactInfo,
 } from "../types";
-import { createEmptySection, DEFAULT_CONTACT_INFO } from "../constants";
+import { createEmptySection, DEFAULT_CONTACT_INFO, getSectionDefinition } from "../constants";
 import { validateCMSSlotMetadata, sanitizeCMSSectionContent } from "../utils";
 import { validateGlobalSettings, TOTAL_GLOBAL_SETTINGS } from "../utils/globalSettingsValidator";
 import {
@@ -29,6 +29,16 @@ import { auditLogService } from "./auditLog.service";
 export interface BulkResult {
   succeeded: string[];
   failed: { id: string; error: string }[];
+}
+
+/**
+ * A "named image section" is one defined in `SLOT_CATALOG` (hero, about, services, testimonials,
+ * contact). These have no Publish button — a replaced image is meant to go live immediately, so
+ * `saveSlot` mirrors the draft into `publishedSlots`. The `gallery` collection is deliberately NOT
+ * in the catalog, so it returns false here and keeps its Draft → Publish workflow.
+ */
+function isNamedImageSection(sectionKey: SectionKey | string): boolean {
+  return Boolean(getSectionDefinition(sectionKey));
 }
 
 export interface ICMSService {
@@ -78,20 +88,30 @@ export const cmsService: ICMSService = {
       throw new Error(`[CMS Service Validation] ${validation.error}`);
     }
 
-    // Prepare merged document mutation payload for Firestore (`Task 1 Draft state`)
-    const payload = {
+    const now = Date.now();
+    const updatedBy = metadata.updatedBy || "admin@alankaran.com";
+    const slotData = { ...metadata, sectionKey, slotName, updatedAt: now };
+
+    // The merge write only touches this one slot key inside each map, so a single-slot save never
+    // rewrites the rest of the document.
+    const payload: Record<string, unknown> = {
       sectionKey,
-      slots: {
-        [slotName]: {
-          ...metadata,
-          sectionKey,
-          slotName,
-          updatedAt: Date.now(),
-        },
-      },
-      updatedAt: Date.now(),
-      updatedBy: metadata.updatedBy || "admin@alankaran.com",
+      slots: { [slotName]: slotData },
+      updatedAt: now,
+      updatedBy,
     };
+
+    // Named page-image sections (hero, about, services, testimonials, contact — anything defined in
+    // SLOT_CATALOG) have no Publish step by design: replacing an image goes live immediately. So the
+    // save mirrors the same slot into `publishedSlots` and stamps `publishedAt`, keeping draft and
+    // published in lock-step. Editorial collections (gallery) are NOT in the catalog and keep their
+    // draft-only behaviour, so their Draft → Publish workflow is untouched.
+    if (isNamedImageSection(sectionKey)) {
+      payload.draftSlots = { [slotName]: slotData };
+      payload.publishedSlots = { [slotName]: slotData };
+      payload.publishedAt = now;
+      payload.publishedBy = updatedBy;
+    }
 
     await firestoreService.save(FirestorePaths.siteContent(sectionKey), payload);
 
@@ -300,13 +320,25 @@ export const cmsService: ICMSService = {
     const { sectionKey, slotName } = record.originalLocation;
     const section = (await this.loadSection(sectionKey)) || createEmptySection(sectionKey);
     const updatedSlots = { ...section.slots, [slotName]: record.asset };
+    const now = Date.now();
 
-    await firestoreService.save(FirestorePaths.siteContent(sectionKey), {
+    const payload: Record<string, unknown> = {
       slots: updatedSlots,
       draftSlots: updatedSlots,
-      updatedAt: Date.now(),
+      updatedAt: now,
       updatedBy: userEmail || "admin@alankaran.com",
-    });
+    };
+
+    // Named sections are instant-live and have no Publish button, so a restore must go straight back
+    // to `publishedSlots` — otherwise a restored hero/logo would sit in the draft, invisible, with no
+    // way to publish it. Only the restored slot is written, so unrelated published slots are left
+    // untouched. Gallery keeps its draft-only restore (its Publish button puts it back live).
+    if (isNamedImageSection(sectionKey)) {
+      payload.publishedSlots = { [slotName]: record.asset };
+      payload.publishedAt = now;
+    }
+
+    await firestoreService.save(FirestorePaths.siteContent(sectionKey), payload);
 
     await firestoreService.delete(FirestorePaths.trash(trashId));
     cmsCacheService.invalidate(sectionKey);
@@ -497,15 +529,28 @@ export const cmsService: ICMSService = {
         for (const { record } of entries) {
           updatedSlots[record.originalLocation.slotName] = record.asset;
         }
+        const now = Date.now();
 
-        // Restore into the working draft only. The admin must publish to put it back on the live
-        // site, which mirrors how a normal upload behaves.
-        await firestoreService.save(FirestorePaths.siteContent(sectionKey), {
+        const payload: Record<string, unknown> = {
           slots: updatedSlots,
           draftSlots: updatedSlots,
-          updatedAt: Date.now(),
+          updatedAt: now,
           updatedBy: userEmail || "admin@alankaran.com",
-        });
+        };
+
+        // Named sections are instant-live: restore straight to `publishedSlots` (only the restored
+        // slots, leaving other published slots untouched). Gallery restores stay draft-only, since
+        // its Publish button is what puts images back on the live site.
+        if (isNamedImageSection(sectionKey)) {
+          const restoredPublished: Record<string, unknown> = {};
+          for (const { record } of entries) {
+            restoredPublished[record.originalLocation.slotName] = record.asset;
+          }
+          payload.publishedSlots = restoredPublished;
+          payload.publishedAt = now;
+        }
+
+        await firestoreService.save(FirestorePaths.siteContent(sectionKey), payload);
 
         cmsCacheService.invalidate(sectionKey);
         restoredTrashIds.push(...entries.map((e) => e.trashId));

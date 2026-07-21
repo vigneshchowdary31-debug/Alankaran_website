@@ -6,10 +6,25 @@ import {
   Image as ImageIcon,
   Loader2,
   AlertTriangle,
+  ArchiveRestore,
 } from "lucide-react";
 import { Button, Card, CardHeader, CardTitle, CardContent } from "@/components/admin/ui";
 import type { CMSTrashRecord } from "../types";
 import type { BulkResult } from "../services/cms.service";
+
+/** Relative "2 hours ago" — presentation helper, no logic. */
+function timeAgo(ts: number): string {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"} ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "yesterday";
+  if (d < 7) return `${d} days ago`;
+  return new Date(ts).toLocaleDateString();
+}
 
 export interface TrashModalProps {
   isOpen: boolean;
@@ -181,23 +196,34 @@ export function TrashModal({
       : `Restore ${count} item${count === 1 ? "" : "s"}?`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-      <Card className="bg-stone-950 border border-stone-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-        <CardHeader className="p-6 border-b border-stone-800/80 bg-stone-900/40 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-amber-950/40 border border-amber-800/80 flex items-center justify-center text-amber-400">
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in-0 duration-150"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Trash and Recovery"
+    >
+      <Card className="bg-stone-950 border border-stone-800/80 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[88vh] animate-in fade-in-0 zoom-in-95 duration-150">
+        <CardHeader className="px-6 py-5 border-b border-stone-800/70 flex flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="size-11 rounded-xl bg-amber-950/40 border border-amber-800/70 flex items-center justify-center text-amber-400 shrink-0">
               <Trash2 className="size-5" />
             </div>
             <div>
-              <CardTitle className="font-serif text-xl text-stone-100 font-normal">
-                CMS Trash &amp; Recovery
+              <CardTitle className="font-serif text-2xl text-white/90 font-normal leading-tight">
+                Trash &amp; Recovery
               </CardTitle>
-              <p className="font-sans text-xs text-stone-400 mt-0.5">
-                Soft-deleted slots are archived here and can be restored at any time.
+              <p className="text-[15px] text-white/55 mt-0.5">
+                Restore deleted images or permanently remove them.
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isWorking} className="text-xs">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={isWorking}
+            className="text-sm shrink-0 focus-visible:ring-2 focus-visible:ring-gold/60"
+          >
             Close
           </Button>
         </CardHeader>
@@ -217,8 +243,8 @@ export function TrashModal({
                 className="size-4 accent-amber-500 cursor-pointer"
                 aria-label="Select all trash items"
               />
-              <span className="font-mono text-xs text-stone-300">
-                Selected: {selected.size} item{selected.size === 1 ? "" : "s"}
+              <span className="text-[13px] text-white/80">
+                {selected.size} selected
               </span>
             </label>
 
@@ -316,13 +342,25 @@ export function TrashModal({
 
         <CardContent className="p-6 overflow-y-auto space-y-3 flex-1">
           {items.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-stone-800 rounded-2xl bg-stone-900/20">
-              <CheckCircle2 className="size-8 text-emerald-500 mx-auto mb-3" />
-              <p className="font-serif text-base text-stone-300">Trash Bin is Empty</p>
-              <p className="font-sans text-xs text-stone-500 max-w-sm mx-auto mt-1">
-                When you soft-delete an image slot, it will appear here for safe inspection and
-                1-click restoration.
+            <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-stone-800/70 bg-stone-900/30 px-6 py-14">
+              <div className="size-[68px] rounded-2xl bg-stone-900/80 border border-stone-800 flex items-center justify-center text-white/50 mb-6">
+                <ArchiveRestore className="size-8" />
+              </div>
+              <h3 className="font-serif text-xl text-white/90">Trash is empty</h3>
+              <p className="text-[15px] text-white/70 mt-3 max-w-sm">
+                Deleted images will appear here.
               </p>
+              <p className="text-[13px] text-white/55 mt-1.5 max-w-sm">
+                Restore items anytime, or permanently remove them when no longer needed.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="mt-8 text-sm focus-visible:ring-2 focus-visible:ring-gold/60"
+              >
+                Back to Gallery
+              </Button>
             </div>
           ) : (
             items.map((item, index) => {
@@ -332,10 +370,10 @@ export function TrashModal({
               return (
                 <div
                   key={item.trashId}
-                  className={`p-4 rounded-xl border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  className={`p-3.5 rounded-xl border transition-colors duration-150 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                     isSelected
                       ? "border-amber-800/80 bg-amber-950/20"
-                      : "border-stone-800/80 bg-stone-900/40 hover:border-amber-900/40"
+                      : "border-stone-800/70 bg-stone-900/30 hover:border-amber-900/40"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -345,7 +383,7 @@ export function TrashModal({
                       disabled={isWorking}
                       onClick={(e) => toggleRow(index, (e as React.MouseEvent).shiftKey)}
                       onChange={() => { /* selection is handled in onClick so shiftKey is readable */ }}
-                      className="size-4 mt-4 accent-amber-500 cursor-pointer shrink-0"
+                      className="size-4 mt-1 accent-amber-500 cursor-pointer shrink-0"
                       aria-label={`Select ${sectionKey}/${slotName}`}
                     />
 
@@ -353,29 +391,25 @@ export function TrashModal({
                       <img
                         src={item.asset.url}
                         alt="Thumbnail"
-                        className="size-12 rounded-lg object-cover border border-stone-800 shrink-0"
+                        className="size-14 rounded-lg object-cover border border-stone-800 shrink-0"
                       />
                     ) : (
-                      <div className="size-12 rounded-lg bg-stone-800 flex items-center justify-center text-stone-500 shrink-0">
+                      <div className="size-14 rounded-lg bg-stone-800 flex items-center justify-center text-white/40 shrink-0">
                         <ImageIcon className="size-5" />
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-stone-200">
-                          {sectionKey.toUpperCase()} / {slotName}
-                        </span>
-                        <span className="text-[10px] font-mono text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80">
-                          Soft Deleted
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-medium text-white/90 truncate" title={item.asset?.altText || slotName}>
+                        {item.asset?.altText || slotName}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[13px] text-gold/80 capitalize">{sectionKey}</span>
+                        <span className="text-white/25">·</span>
+                        <span className="text-[13px] text-white/55" title={new Date(item.deletedAt).toLocaleString()}>
+                          Deleted {timeAgo(item.deletedAt)}
                         </span>
                       </div>
-                      <p className="font-mono text-[11px] text-stone-400 font-light truncate max-w-xs">
-                        {item.asset?.cloudinaryId || "Unknown CDN Asset"}
-                      </p>
-                      <p className="font-sans text-[10px] text-stone-500">
-                        Deleted on {new Date(item.deletedAt).toLocaleString()} by {item.deletedBy}
-                      </p>
                     </div>
                   </div>
 

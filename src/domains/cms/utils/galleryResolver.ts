@@ -60,3 +60,15 @@ export function selectPublicSlotMap(
   }
   return section.publishedSlots || section.slots || {};
 }
+
+/**
+ * The gallery's working-draft slot map for the admin Gallery Manager.
+ *
+ * `slots` is the single source of truth: every gallery write (`saveSlot`, reorder, delete, restore)
+ * maintains `slots`. The `draftSlots` field is a legacy artifact left by the one-time bootstrap; it
+ * is NOT kept current, so reading it renders stale data. Both admin gallery reads (the grid and the
+ * Live Preview) go through this one function so they can never diverge.
+ */
+export function selectGalleryDraftSlots(section: any): Record<string, CMSSlotMetadata> {
+  return (section?.slots || {}) as Record<string, CMSSlotMetadata>;
+}
