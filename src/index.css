@@ -26,8 +26,13 @@
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-primary-border: var(--primary-border);
 
+  /* Brand gold — shared by the public site and the CMS. The base .text-gold/
+     .bg-gold utilities resolve to --primary (#B08D57); these tokens drive the
+     gold *variants* (hover, ring, /opacity), so they must match --primary to
+     stay coherent. Kept global (not champagne) so the public site is unchanged. */
   --color-gold: hsl(36 36% 52%);
   --color-gold-hover: hsl(35 39% 44%);
+  --color-gold-light: hsl(36 44% 62%);
   --color-nizami-maroon: hsl(347 41% 21%);
   --color-nizami-dark: hsl(20 12% 15%);
   --color-sandstone: hsl(35 27% 81%);
@@ -77,6 +82,76 @@
   --radius-lg: 6px;
   --radius-xl: 6px;
   --radius-2xl: 6px;
+}
+
+/*
+ * ── CMS Luxury Palette (Espresso · Champagne · Ivory) ──────────────────────
+ *
+ * The admin CMS is built on Tailwind's built-in `stone`, `white`, and semantic
+ * (`emerald`/`amber`/`rose`/`sky`) utilities. Overriding those scales here — one
+ * file, no component changes — recolors every admin page at once while leaving
+ * all layout, spacing, and behaviour untouched.
+ *
+ *   Espresso #181412 · Warm Card #312723 · Champagne Gold #C99B4C
+ *   Ivory #F8F4EF · Soft Secondary #D8CEC2 · Muted Metadata #8E8176
+ *
+ * The warm-neutral `stone` ramp replaces the old brown-grey greys; `white`
+ * becomes ivory so every `text-white/xx` tier reads as warm ivory at AA
+ * contrast; status colours are muted so gold stays the sole bright accent.
+ *
+ * SCOPED to `.cms-theme` — a class toggled on <body> only while an /admin
+ * route is active (see App.tsx). Because these are plain CSS-variable
+ * overrides of Tailwind's var()-based utilities, the public marketing site
+ * keeps Tailwind's default palette and is never recoloured by the CMS.
+ */
+.cms-theme {
+  /* Warm espresso neutral ramp (replaces Tailwind stone) */
+  --color-stone-50: #F8F4EF;   /* Ivory */
+  --color-stone-100: #F1EBE2;
+  --color-stone-200: #E6DDD2;
+  --color-stone-300: #D8CEC2;  /* Soft secondary text */
+  --color-stone-400: #A99C8F;
+  --color-stone-500: #9C8F82;  /* Muted metadata — nudged from the spec's #8E8176 so small metadata
+                                  text clears WCAG AA (4.5:1) on the warm card, not just on the bg */
+  --color-stone-600: #6B5D53;
+  --color-stone-700: #4A3D36;  /* Input / control borders */
+  --color-stone-800: #312723;  /* Warm card surface / borders */
+  --color-stone-900: #211B18;
+  --color-stone-950: #181412;  /* Espresso — page background */
+
+  /* Ivory text: every text-white/xx tier renders as warm ivory */
+  --color-white: #F8F4EF;
+
+  /* Muted semantic status colours (no neon) — success / draft / danger / info */
+  --color-emerald-300: #A9C3A2;
+  --color-emerald-400: #86A67E;
+  --color-emerald-500: #6F9067;
+  --color-emerald-800: #3A4D37;
+  --color-emerald-900: #26331F;
+  --color-emerald-950: #1B2417;
+
+  --color-amber-300: #D6B87E;
+  --color-amber-400: #C29A5B;
+  --color-amber-500: #A97F3E;
+  --color-amber-800: #5A4526;
+  --color-amber-900: #3E2F1A;
+  --color-amber-950: #2A2014;
+
+  --color-rose-300: #D3A99E;
+  --color-rose-400: #C08375;
+  --color-rose-500: #AE6E5F;
+  --color-rose-800: #5C3A30;
+  --color-rose-900: #3E2822;
+  --color-rose-950: #2A1B17;
+
+  --color-sky-300: #9FB2C0;
+  --color-sky-400: #7F97A8;
+  --color-sky-900: #23303A;
+  --color-sky-950: #182029;
+
+  /* `red` mirrors `rose` so danger reads consistently wherever either is used */
+  --color-red-400: #C08375;
+  --color-red-500: #AE6E5F;
 }
 
 :root {

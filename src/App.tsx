@@ -85,6 +85,16 @@ function MainContent({ showWhatsApp }: { showWhatsApp: boolean }) {
   const [location] = useLocation();
   const isAdminRoute = location.startsWith("/admin");
 
+  // Scope the CMS "cms-theme" palette to the admin area only. Toggling the class
+  // on <body> (not a nested div) means Radix modals — which portal to
+  // document.body — also inherit the espresso/ivory tokens, while the public
+  // marketing site is never touched by them.
+  useEffect(() => {
+    if (!isAdminRoute) return;
+    document.body.classList.add("cms-theme");
+    return () => document.body.classList.remove("cms-theme");
+  }, [isAdminRoute]);
+
   if (isAdminRoute) {
     return (
       <AuthProvider>
